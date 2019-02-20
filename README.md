@@ -4,7 +4,7 @@ Project for development of the robotic arm, and also our first Github project.
 
 ## Github benefits
 
-1. Code and designs can be version controlled using [Git](https://git-scm.com).  Git is the industry-standard for software version control and a very powerful tool.  It can have a bit of a learning curve (see [Getting Started with Git](https://git-scm.com)) but I don't think everyone needs to be fully versed.  The documentation and project management features can be used online without having to know what's under the hood.  Also note that we should not version control large binary files (CAD designs, etc.) using Git as the repository keeps a copy of **every** version of the file, and every computer with the repository gets all this information.  I.e., the repositories bloat quickly if you version control large files.  Also note that graphical tools such as [Sourcetree](https://www.sourcetreeapp.com) and/or [TortoiseGit](https://tortoisegit.org) can significantly simplify git usage.
+1. Code and designs can be version controlled using [Git](https://git-scm.com).  Git is the industry-standard for software version control and a very powerful tool.  It can have a bit of a learning curve (see [Getting Started with Git](https://git-scm.com)) but I don't think everyone needs to be fully versed.  The documentation and project management features can be used online without having to know what's under the hood.  
 
 1. A web-based interface but the code repository (or even the Wiki documentation repository) can be cloned and edited locally.  The data is all in the cloud, and so can be easily accessed from anywhere.
 
@@ -25,3 +25,19 @@ Project for development of the robotic arm, and also our first Github project.
 1. Git is not a streamlined communications tool (c.f. Slack).  Discussions can be viewed online, and notifications are sent via e-mail, but there is no mobile app, social media integration, etc.
 
 1. Git is not a fully featured project management tool.  I've found the Issues structure more than adequate but there is no functionality for advanced features such as Gantt charts, resource planning, etc.
+
+## Recommendations 
+
+1. We should not use Git/Github to version control large binary files (CAD designs, etc.) using Git as the repository keeps a copy of **every** version of the file, and every computer with the repository gets all this information.  I.e., the repositories bloat quickly if you version control large files.  We should continue using Google Drive for this sort of data.
+
+1. We set up an admin repository.  This can hold *Issues* for cross project work (e.g., the shopping list), the Wiki can be used to record meeting minutes, etc. We can also move this Github primer to that repository.
+
+1. Do we want to also track progress on prosthesis assembly etc. on Github (i.e., the list that's currently on the whiteboard)? If we have no complaints with the whiteboard approach, then maybe not.  But it could be a good place to order the work, keep track of setbacks, etc.
+
+1. Many users who deal with the code repository may want to install graphical tools such as [Sourcetree](https://www.sourcetreeapp.com) and/or [TortoiseGit](https://tortoisegit.org) on their computers.  This can significantly simplify git usage, especially if you're just getting started.
+
+1. To the extent possible, we should keep all our work in the Github and Google Drive framework, with documentation living in the Github wikis.  For example, we may want to include our user survey here - version control would be useful and it'll put the document in a location where everyone can comment and/or edit (but all edits can be rolled back thanks to version control).
+
+1. We use *Issues* to keep track of all of our to-do work.  The project Kanban board is a great way to get a snapshot of overall progress and activity, but can also be easily transformed into your own personal to-do list by filtering by assignee.
+
+1. Everyone gets signed up for Github!
