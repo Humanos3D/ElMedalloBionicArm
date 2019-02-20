@@ -28,9 +28,9 @@ Project for development of the robotic arm, and also our first Github project.
 
 ## Recommendations 
 
-1. We should not use Git/Github to version control large binary files (CAD designs, etc.) using Git as the repository keeps a copy of **every** version of the file, and every computer with the repository gets all this information.  I.e., the repositories bloat quickly if you version control large files.  We should continue using Google Drive for this sort of data.
+1. We should not use Git/Github to version control large binary files (CAD designs, etc.) as the repository keeps a copy of **every** version of the file, and every computer with the repository gets all this information.  I.e., the repositories bloat quickly if you version control large files.  We should continue using Google Drive for this sort of data.
 
-1. We set up an admin repository.  This can hold *Issues* for cross project work (e.g., the shopping list), the Wiki can be used to record meeting minutes, etc. We can also move this Github primer to that repository.
+1. We set up an admin repository.  This can hold *Issues* for cross project work (e.g., the shopping list), the Wiki can be used to record meeting minutes, etc. We can also move this Github primer to that repository.  This repository should be private (probably some/most others too).
 
 1. Do we want to also track progress on prosthesis assembly etc. on Github (i.e., the list that's currently on the whiteboard)? If we have no complaints with the whiteboard approach, then maybe not.  But it could be a good place to order the work, keep track of setbacks, etc.
 
