@@ -26,7 +26,7 @@ Project for development of the robotic arm, and also our first Github project.
 
 1. Git is not a fully featured project management tool.  I've found the Issues structure more than adequate but there is no functionality for advanced features such as Gantt charts, resource planning, etc.
 
-## Recommendations 
+## Tips and Recommendations 
 
 1. We should not use Git/Github to version control large binary files (CAD designs, etc.) as the repository keeps a copy of **every** version of the file, and every computer with the repository gets all this information.  I.e., the repositories bloat quickly if you version control large files.  We should continue using Google Drive for this sort of data.
 
@@ -39,5 +39,11 @@ Project for development of the robotic arm, and also our first Github project.
 1. To the extent possible, we should keep all our work in the Github and Google Drive framework, with documentation living in the Github wikis.  For example, we may want to include our user survey here - version control would be useful and it'll put the document in a location where everyone can comment and/or edit (but all edits can be rolled back thanks to version control).
 
 1. We use *Issues* to keep track of all of our to-do work.  The project Kanban board is a great way to get a snapshot of overall progress and activity, but can also be easily transformed into your own personal to-do list by filtering by assignee.
+
+1. We can include images in our documentation but it's a little bit trickier.  My recommendation is
+   * Check out a copy of the Wiki repository (e.g., https://github.com/enable-medellin/robotic-arm.wiki.git; this link is given at the bottom right of the Wiki page.
+   * Add your desired image (PNG, JPG, GIF, PSD, and SVG should all work) to a subdirectory in the repository called `images`.
+   * Commit your changes both locally and to the remote repository (i.e., do git `commit` and `push` operations)
+   * The images can then be displayed in your Wiki pages by using HTML syntax to link to them on the web.  E.g., see [this page](https://github.com/enable-medellin/robotic-arm/wiki/Protesis-Avanzadas-EMG-Sensor), where I use the command `<img src="https://raw.githubusercontent.com/wiki/enable-medellin/robotic-arm/images/pa-emg-front.jpg" width="300">`.  You'll need to swap in your file name and potentially change the `robotic-arm` part of the address if you're working in a different repository.  Also note that the image size can be controlled (done using the `width="300"` option here.
 
 1. Everyone gets signed up for Github!
