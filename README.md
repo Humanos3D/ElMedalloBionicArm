@@ -1,5 +1,5 @@
 # Robotic Arm
 
-Project for development of the robotic arm, and also our first Github project.  
+Project for development of the robotic arm.  
 
-I've moved the Github discussion [here](https://github.com/enable-medellin/admin)
+Note that the Github discussion has been moved [here](https://github.com/enable-medellin/general/wiki/Github)
