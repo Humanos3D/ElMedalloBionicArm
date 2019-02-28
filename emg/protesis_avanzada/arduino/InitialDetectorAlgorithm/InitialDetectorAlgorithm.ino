@@ -13,10 +13,11 @@
 #define SensorInputPin A5 // input pin number
 
 // Parameters
-float threshold = .5;          // Threshold to compare to
-float filterFrequency = 0.2;   // Change rate to be considered background (Hz)
-float rise_time = 100;         // Must see signal this long for 0 -> 1 (ms)
-float fall_time = 1000;        // Signal must be low this long for 1 -> 0 (ms)
+float threshold = .5;             // Voltage above background to register signal
+float filterFrequency = 0.2;      // Change rate to be considered background (Hz)
+float rise_time = 100;            // Must see signal this long for 0 -> 1 (ms)
+float fall_time = 1000;           // Signal must be low this long for 1 -> 0 (ms)
+float background_timeout = 5000;  // Max time to not calculate background (ms)
 
 // Initialization
 int state = 0;                 // 0 for no signal; 1 for signal
@@ -24,6 +25,7 @@ float background = 0;          // Tracks background level
 bool high_now = false;         // Whether the instaneous signal is high
 int last_low = 0;              // Time (ms) of last observed low
 int last_high = 0;             // Time (ms) of last observed high
+int last_background = 0;       // Time (ms) of contributing background
 
 // create a one pole filter to estimate background
 FilterOnePole backgroundFilter(LOWPASS, filterFrequency);   
@@ -51,15 +53,15 @@ void loop() {
 
   // Do accounting based on whether we are exceeding threshold
   if ((voltage - background) > threshold) {
-    last_high = millis();
+    last_high = current_time;
     high_now = true;
   }
   else {
-    last_low = millis();
+    last_low = current_time;
     high_now = false;
   }
 
-  // Determine the state and track the background
+  // Determine the state 
   if (high_now) {
     if ((current_time - last_low) > rise_time) {
       state = 1;
@@ -69,10 +71,15 @@ void loop() {
     if ((current_time - last_high) > fall_time) {
       state = 0;
     }
-    // Update the background filter
-    if (state == 0){
-       background = backgroundFilter.input(voltage);
+  }
+
+  // Track the background
+  if ((state == 0) and not high_now){
+    background = backgroundFilter.input(voltage);
+    last_background = current_time;
     }
+  else if (current_time - last_background > background_timeout){
+    background = backgroundFilter.input(voltage);      
   }
 
   // Print out the system values
