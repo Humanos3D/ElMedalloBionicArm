@@ -12,12 +12,22 @@
 
 #define SensorInputPin A5 // input pin number
 
-// Parameters
-float threshold = .5;             // Voltage above background to register signal
+// Fixed parameters
+int sensor = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
 float filterFrequency = 0.2;      // Change rate to be considered background (Hz)
-float rise_time = 100;            // Must see signal this long for 0 -> 1 (ms)
 float fall_time = 1000;           // Signal must be low this long for 1 -> 0 (ms)
+
+// Sensor specific parameters
+// if (sensor == 0){
+// float threshold = .5;             // Voltage above background to register signal
+// float rise_time = 100;            // Must see signal this long for 0 -> 1 (ms)
+// float background_timeout = 5000;  // Max time to not calculate background (ms)
+// }
+// else if (sensor == 1){
+float threshold = .25;             // Voltage above background to register signal
+float rise_time = 2;              // Must see signal this long for 0 -> 1 (ms)
 float background_timeout = 5000;  // Max time to not calculate background (ms)
+//}
 
 // Initialization
 int state = 0;                 // 0 for no signal; 1 for signal
@@ -33,7 +43,7 @@ FilterOnePole backgroundFilter(LOWPASS, filterFrequency);
 // the setup routine runs once when you press reset:
 void setup() {
  
-  // initialize serial communication at 9600 bits per second:
+  // initialize serial communication at 19200 bits per second:
   Serial.begin(19200);
 
   // Initialize the on-board LED (will use it to show state)
@@ -52,13 +62,17 @@ void loop() {
   float voltage = sensorValue * (5.0 / 1023.0);
 
   // Do accounting based on whether we are exceeding threshold
-  if ((voltage - background) > threshold) {
+  if (sensor == 0){
+    high_now = (voltage - background) > threshold;
+  }
+  else if (sensor == 1){
+    high_now = abs(voltage - background) > threshold;
+  }
+  if (high_now) {
     last_high = current_time;
-    high_now = true;
   }
   else {
     last_low = current_time;
-    high_now = false;
   }
 
   // Determine the state 
