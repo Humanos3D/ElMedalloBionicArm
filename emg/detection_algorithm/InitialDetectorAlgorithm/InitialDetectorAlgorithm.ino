@@ -13,21 +13,20 @@
 #define SensorInputPin A5 // input pin number
 
 // Fixed parameters
-int sensor = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
+int sensor = 0;                   // 0 for Protesis Avanzada; 1 for OYMotion
 float filterFrequency = 0.2;      // Change rate to be considered background (Hz)
 float fall_time = 1000;           // Signal must be low this long for 1 -> 0 (ms)
+float threshold;                  // Set later
+float rise_time;                  // Set later
+float background_timeout;         // Set later
 
-// Sensor specific parameters
-// if (sensor == 0){
-// float threshold = .5;             // Voltage above background to register signal
-// float rise_time = 100;            // Must see signal this long for 0 -> 1 (ms)
-// float background_timeout = 5000;  // Max time to not calculate background (ms)
-// }
-// else if (sensor == 1){
-float threshold = .25;             // Voltage above background to register signal
-float rise_time = 2;              // Must see signal this long for 0 -> 1 (ms)
-float background_timeout = 5000;  // Max time to not calculate background (ms)
-//}
+// Variable parameters we'll change in setup
+float threshold_oy = .25;            // Voltage above background to register signal
+float rise_time_oy = 2;              // Must see signal this long for 0 -> 1 (ms)
+float background_timeout_oy = 5000;  // Max time to not calculate background (ms)
+float threshold_pa = .5;             // Voltage above background to register signal
+float rise_time_pa = 100;            // Must see signal this long for 0 -> 1 (ms)
+float background_timeout_pa = 5000;  // Max time to not calculate background (ms)
 
 // Initialization
 int state = 0;                 // 0 for no signal; 1 for signal
@@ -54,6 +53,18 @@ void setup() {
 // the loop routine runs over and over
 void loop() {
   
+  // Set sensor specific parameters (TODO - Figure out how to do this only once)
+  if (sensor == 0){
+    threshold = threshold_pa;
+    rise_time = rise_time_pa; 
+    background_timeout = background_timeout_pa;
+  }
+  else if (sensor == 1){
+    threshold = threshold_oy;
+    rise_time = rise_time_oy; 
+    background_timeout = background_timeout_oy;
+  }
+
   // read the input:
   int sensorValue = analogRead(SensorInputPin);
   int current_time = millis();
@@ -101,6 +112,8 @@ void loop() {
   Serial.print("   ");
   Serial.print(state);
   Serial.print("   ");
+//  Serial.print(high_now);
+//  Serial.print("   ");
   Serial.println(background);
 
   // Control the digital outputs
