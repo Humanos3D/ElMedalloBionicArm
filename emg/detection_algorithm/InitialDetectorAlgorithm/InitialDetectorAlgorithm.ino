@@ -12,15 +12,18 @@
 
 #define SensorInputPin A5 // input pin number
 
+// Setup parameters
+int sensor = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
+
 // Fixed parameters
-int sensor = 0;                   // 0 for Protesis Avanzada; 1 for OYMotion
-float filterFrequency = 0.2;      // Change rate to be considered background (Hz)
+float background_frequency = 0.2; // Change rate to be considered background (Hz)
+float ceiling_frequency = 300;    // Highest expected frequency (Hz)
 float fall_time = 1000;           // Signal must be low this long for 1 -> 0 (ms)
-float threshold;                  // Set later
-float rise_time;                  // Set later
-float background_timeout;         // Set later
 
 // Variable parameters we'll change in setup
+float threshold;                     // Set later
+float rise_time;                     // Set later
+float background_timeout;            // Set later
 float threshold_oy = .25;            // Voltage above background to register signal
 float rise_time_oy = 2;              // Must see signal this long for 0 -> 1 (ms)
 float background_timeout_oy = 5000;  // Max time to not calculate background (ms)
@@ -37,7 +40,10 @@ int last_high = 0;             // Time (ms) of last observed high
 int last_background = 0;       // Time (ms) of contributing background
 
 // create a one pole filter to estimate background
-FilterOnePole backgroundFilter(LOWPASS, filterFrequency);   
+FilterOnePole backgroundFilter(LOWPASS, background_frequency); 
+
+// create a filter to remove high frequency noise  
+FilterOnePole lowpassFilter(LOWPASS, ceiling_frequency); 
   
 // the setup routine runs once when you press reset:
 void setup() {
@@ -48,11 +54,6 @@ void setup() {
   // Initialize the on-board LED (will use it to show state)
   pinMode(LED_BUILTIN, OUTPUT);
 
-}
-
-// the loop routine runs over and over
-void loop() {
-  
   // Set sensor specific parameters (TODO - Figure out how to do this only once)
   if (sensor == 0){
     threshold = threshold_pa;
@@ -65,19 +66,27 @@ void loop() {
     background_timeout = background_timeout_oy;
   }
 
+}
+
+// the loop routine runs over and over
+void loop() {
+  
   // read the input:
   int sensorValue = analogRead(SensorInputPin);
   int current_time = millis();
-  
+
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
   float voltage = sensorValue * (5.0 / 1023.0);
 
+  // do low pass filtering
+  float lp_signal = lowpassFilter.input(voltage);
+
   // Do accounting based on whether we are exceeding threshold
   if (sensor == 0){
-    high_now = (voltage - background) > threshold;
+    high_now = (lp_signal - background) > threshold;
   }
   else if (sensor == 1){
-    high_now = abs(voltage - background) > threshold;
+    high_now = abs(lp_signal - background) > threshold;
   }
   if (high_now) {
     last_high = current_time;
@@ -100,15 +109,15 @@ void loop() {
 
   // Track the background
   if ((state == 0) and not high_now){
-    background = backgroundFilter.input(voltage);
+    background = backgroundFilter.input(lp_signal);
     last_background = current_time;
     }
   else if (current_time - last_background > background_timeout){
-    background = backgroundFilter.input(voltage);      
+    background = backgroundFilter.input(lp_signal);      
   }
 
   // Print out the system values
-  Serial.print(voltage);
+  Serial.print(lp_signal);
   Serial.print("   ");
   Serial.print(state);
   Serial.print("   ");
