@@ -2,15 +2,18 @@
   InitialDetectorAlgorithm
 
   Development code for figuring out how to provide a robust signal
-  from the Protesis Avanzada EMG sensor
+  from either EMG sensor
+
+  For a detailed discussion of functionality and defining parameters, 
+  see https://github.com/enable-medellin/robotic-arm/wiki/Initial-EMG-Algorithm
 
   Bryn Davis
 
 */
 
-#include <Filters.h>   // From https://github.com/JonHub/Filters
+#include <Filters.h>         // From https://github.com/JonHub/Filters
 
-#define SensorInputPin A5 // input pin number
+#define SensorInputPin A5    // input pin number
 
 // Setup parameters
 int sensor = 0;                   // 0 for Protesis Avanzada; 1 for OYMotion
@@ -40,8 +43,8 @@ int last_low = 0;              // Time (ms) of last observed low
 int last_high = 0;             // Time (ms) of last observed high
 int last_background = 0;       // Time (ms) of contributing background
 int current_time = 0;          // Tracking loop time (ms)
-int previous_time = 0;
-float emg_signal;               // Current signal 
+int previous_time = 0;         // Stores the previous time for rate calculations
+float emg_signal;              // Current signal 
 
 // create a one pole filter to estimate background
 FilterOnePole backgroundFilter(LOWPASS, background_frequency); 
@@ -53,7 +56,7 @@ FilterOnePole lowpassFilter(LOWPASS, ceiling_frequency);
 void setup() {
  
   // initialize serial communication at 19200 bits per second:
-  Serial.begin(19200);
+  Serial.begin(38400);
 
   // Initialize the on-board LED (will use it to show state)
   pinMode(LED_BUILTIN, OUTPUT);
