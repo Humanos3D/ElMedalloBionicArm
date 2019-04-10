@@ -5,7 +5,7 @@
 const int servoPin = 3;
 const int buttonPin = 2;
 const int OPEN_POS = 0;
-const int CLOSED_POS = 75;
+const int CLOSED_POS = 180;
 const int delayTime = 500;
 
 // Initialise variables
@@ -22,7 +22,7 @@ void setup() {
   Servo1.attach(servoPin);
   Servo1.write(motorValue);
   pinMode(buttonPin, INPUT);
-
+  
   //Debugging
   Serial.begin(9600);
 }
@@ -30,7 +30,6 @@ void setup() {
 
 void loop() {
   // Read button value
-  prevButtonState = buttonState;
   buttonState = digitalRead(buttonPin);
   
   // Toggle motor position if button is pressed
@@ -49,4 +48,6 @@ void loop() {
     }
     delay(delayTime);
   }
+
+  prevButtonState = buttonState;
 }
