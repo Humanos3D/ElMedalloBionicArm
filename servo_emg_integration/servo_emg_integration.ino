@@ -16,28 +16,34 @@
 #include <Servo.h>
 
 // Define pins and constants
-const int servoPin = 10;
+const int servoPin = 11;
+const int servoPin2 = 10;
 const int lockSwitchPin = 9;
-const int buttonPin = 8;
+const int buttonPin = A1;
 const int OPEN_POS = 0;
 const int CLOSED_POS = 180;
+const int OPEN_POS2 = 0;
+const int CLOSED_POS2 = 180;
 const int servoDelayTime = 500;
 
 // Lock switch debouncing constants
 const int lockSwitchDelayTime = 20;
-const int lockSwitchCounterLimit = 10;
+const int lockSwitchCounterLimit = 30;
 int lockSwitchCounter = 0;
 
 // Initialise variables
 boolean stateFlag = LOW;
 boolean prevState = LOW;
 int motorValue = OPEN_POS;
+int motorValue2 = OPEN_POS2;
 
 // Parameters to be set
 boolean buttonFlag = 1; // 1 to use button, 0 to use EMG sensors
+boolean lockSwitchFlag = 0; // 1 to use lockswitch, 0 to ignore
 
 // Create a servo object
 Servo Servo1;
+Servo Servo2;
 
 void servoSetup();
 void servoLoop();
@@ -49,7 +55,7 @@ void servoLoop();
 #define DigitalOutPin 11     // Output pin
 
 // Setup parameters
-int sensor = 0;                   // 0 for Protesis Avanzada; 1 for OYMotion
+int sensor = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
 int debug_signals = 0;            // 1 to show signals over serial
 
 // Fixed parameters
@@ -195,6 +201,8 @@ void servoSetup() {
   // Initialise servo and button mode
   Servo1.attach(servoPin);
   Servo1.write(motorValue);
+  Servo2.attach(servoPin2);
+  Servo2.write(motorValue2);
 
   pinMode(buttonPin, INPUT);
 
@@ -203,22 +211,24 @@ void servoSetup() {
 
 void servoLoop() {
   // LockSwitch Debouncing
-  if (digitalRead(lockSwitchPin) == HIGH) {
-    if (lockSwitchCounter <= lockSwitchCounterLimit) {
-      if (lockSwitchCounter == lockSwitchCounterLimit) { // If lock switch has been on for lockSwitchDelayTime*lockSwitchCounterLimit then activate LED etc.
-        Serial.println("Lock Switch on");
-        digitalWrite(LED_BUILTIN, HIGH);
-      }
+  if (lockSwitchFlag == HIGH) {
+    if (digitalRead(lockSwitchPin) == HIGH) {
+      if (lockSwitchCounter <= lockSwitchCounterLimit) {
+        if (lockSwitchCounter == lockSwitchCounterLimit) { // If lock switch has been on for lockSwitchDelayTime*lockSwitchCounterLimit then activate LED etc.
+          Serial.println("Lock Switch on");
+          digitalWrite(LED_BUILTIN, HIGH);
+        }
 
-      lockSwitchCounter++;
-      delay(lockSwitchDelayTime);
+        lockSwitchCounter++;
+        delay(lockSwitchDelayTime);
+      }
+    } else {
+      if (lockSwitchCounter >= lockSwitchCounterLimit) {
+        Serial.println("Lock Switch off");
+        digitalWrite(LED_BUILTIN, LOW);
+      }
+      lockSwitchCounter = 0;
     }
-  } else {
-    if (lockSwitchCounter == lockSwitchCounterLimit) {
-      Serial.println("Lock Switch off");
-      digitalWrite(LED_BUILTIN, LOW);
-    }
-    lockSwitchCounter = 0;
   }
 
   if (lockSwitchCounter < lockSwitchCounterLimit) {
@@ -235,15 +245,23 @@ void servoLoop() {
 
     // If lock switch off: Check EMG signal state, and if we are on a rising edge then toggle motor state
     if ((prevState == LOW) && (state == HIGH)) {
-      Serial.println("Button Pushed"); // Debugging
+      if (buttonFlag == 1) {
+        Serial.println("Button Pushed"); // Debugging
+      } else {
+        Serial.println("EMG rising edge");
+      }
       if (stateFlag == LOW) {
         motorValue = CLOSED_POS;
+        motorValue2 = CLOSED_POS2;
         Servo1.write(motorValue);
+        Servo2.write(motorValue2);
         Serial.println("Closing..."); // Debugging
         stateFlag = HIGH;
       } else if (stateFlag == HIGH) {
         motorValue = OPEN_POS;
+        motorValue2 = OPEN_POS2;
         Servo1.write(motorValue);
+        Servo2.write(motorValue2);
         Serial.println("Opening..."); // Debugging
         stateFlag = LOW;
       }
