@@ -16,9 +16,9 @@
 #include <Servo.h>
 
 // Define pins and constants
-const int servoPin = 11;
+const int servoPin = 9;
 const int servoPin2 = 10;
-const int lockSwitchPin = 9;
+const int lockSwitchPin = 11;
 const int buttonPin = A1;
 const int OPEN_POS = 0;
 const int CLOSED_POS = 180;
@@ -34,12 +34,13 @@ int lockSwitchCounter = 0;
 // Initialise variables
 boolean stateFlag = LOW;
 boolean prevState = LOW;
+boolean lockSwitchState = LOW;
 int motorValue = OPEN_POS;
 int motorValue2 = OPEN_POS2;
 
 // Parameters to be set
 boolean buttonFlag = 1; // 1 to use button, 0 to use EMG sensors
-boolean lockSwitchFlag = 0; // 1 to use lockswitch, 0 to ignore
+boolean lockSwitchFlag = 1; // 1 to use lockswitch, 0 to ignore
 
 // Create a servo object
 Servo Servo1;
@@ -52,7 +53,7 @@ void servoLoop();
 #include <Filters.h>         // From https://github.com/JonHub/Filters
 
 #define SensorInputPin A0    // Input pin number
-#define DigitalOutPin 11     // Output pin
+//#define DigitalOutPin 11     // Output pin
 
 // Setup parameters
 int sensor = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
@@ -102,7 +103,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
   // Initialize a digital output for hand-off to robotics
-  pinMode(DigitalOutPin, OUTPUT);
+  // pinMode(DigitalOutPin, OUTPUT);
 
   // Set sensor specific parameters (TODO - Figure out how to do this only once)
   if (sensor == 0) {
@@ -212,7 +213,10 @@ void servoSetup() {
 void servoLoop() {
   // LockSwitch Debouncing
   if (lockSwitchFlag == HIGH) {
-    if (digitalRead(lockSwitchPin) == HIGH) {
+    lockSwitchState = digitalRead(lockSwitchPin);
+    Serial.print("State: ");
+    Serial.println(lockSwitchState);
+    if (lockSwitchState == LOW) {
       if (lockSwitchCounter <= lockSwitchCounterLimit) {
         if (lockSwitchCounter == lockSwitchCounterLimit) { // If lock switch has been on for lockSwitchDelayTime*lockSwitchCounterLimit then activate LED etc.
           Serial.println("Lock Switch on");
@@ -236,11 +240,11 @@ void servoLoop() {
     // Control the digital outputs for debugging purposes
     if (state == 1) {
       digitalWrite(LED_BUILTIN, HIGH);
-      digitalWrite(DigitalOutPin, HIGH);
+      // digitalWrite(DigitalOutPin, HIGH);
     }
     else {
       digitalWrite(LED_BUILTIN, LOW);
-      digitalWrite(DigitalOutPin, LOW);
+      // digitalWrite(DigitalOutPin, LOW);
     }
 
     // If lock switch off: Check EMG signal state, and if we are on a rising edge then toggle motor state
