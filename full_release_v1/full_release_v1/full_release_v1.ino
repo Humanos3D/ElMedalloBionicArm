@@ -10,7 +10,6 @@
   Everything else written by Mark Walbran
 */
 
-// --------SERVO CODE---------
 // Include the libraries
 #include <Servo.h>
 #include <Filters.h>         // From https://github.com/JonHub/Filters
@@ -43,6 +42,8 @@ int lockSwitchCounter = 0;
 // Setup parameters
 boolean buttonFlag = 1; // 0 to use EMG sensors; 1 to use button
 boolean lockSwitchFlag = 1; // 0 to ignore lockswitch; 1 to use lockswitch
+boolean motorFlag1 = 1; // 0 to disable motor; 1 to enable
+boolean motorFlag2 = 1; // 0 to disable motor; 1 to enable
 
 // Debugging options - 1 to show signals over serial interface (to viewed by Serial Monitor or Serial Plotter)
 boolean EMGDebugging = 0;
@@ -104,10 +105,15 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
   // Initialise servos
-  Servo1.attach(servoPin);
-  Servo1.write(motorValue);
-  Servo2.attach(servoPin2);
-  Servo2.write(motorValue2);
+  if (motorFlag1) {
+    Servo1.attach(servoPin);
+    Servo1.write(motorValue);
+  }
+
+  if (motorFlag2) {
+    Servo2.attach(servoPin2);
+    Servo2.write(motorValue2);
+  }
 
   // Initialise button and lockSwitch
   pinMode(buttonPin, INPUT);
@@ -245,18 +251,24 @@ void servos() {
   if (motorState) { // If motor state = 1 (hand currently closed) then open hand
     motorValue = OPEN_POS;
     motorValue2 = OPEN_POS2;
-    Servo1.write(motorValue);
-    Servo2.write(motorValue2);
     Serial.println("Opening hand..."); // Debugging
     motorState = 0;
   } else { // If motor state = 0 (hand currently open) then close hand
     motorValue = CLOSED_POS;
     motorValue2 = CLOSED_POS2;
-    Servo1.write(motorValue);
-    Servo2.write(motorValue2);
     Serial.println("Closing hand..."); // Debugging
     motorState = 1;
   }
+
+  // Write to active motors
+  if (motorFlag1){
+    Servo1.write(motorValue);
+  }
+  
+  if (motorFlag2) {
+    Servo2.write(motorValue2);
+  }
+  
   delay(servoDelayTime);
 }
 
