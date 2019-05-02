@@ -23,7 +23,7 @@
 
 // Set constants
 const int OPEN_POS = 0;
-const int CLOSED_POS = 180;
+const int CLOSED_POS = 140;
 const int OPEN_POS2 = 0;
 const int CLOSED_POS2 = 180;
 const int servoDelayTime = 500;
@@ -40,10 +40,10 @@ int motorValue2 = OPEN_POS2;
 int lockSwitchCounter = 0;
 
 // Setup parameters
-boolean buttonFlag = 1; // 0 to use EMG sensors; 1 to use button
-boolean lockSwitchFlag = 1; // 0 to ignore lockswitch; 1 to use lockswitch
+boolean buttonFlag = 0; // 0 to use EMG sensors; 1 to use button
+boolean lockSwitchFlag = 0; // 0 to ignore lockswitch; 1 to use lockswitch
 boolean motorFlag1 = 1; // 0 to disable motor; 1 to enable
-boolean motorFlag2 = 1; // 0 to disable motor; 1 to enable
+boolean motorFlag2 = 0; // 0 to disable motor; 1 to enable
 
 // Debugging options - 1 to show signals over serial interface (to viewed by Serial Monitor or Serial Plotter)
 boolean EMGDebugging = 0;
