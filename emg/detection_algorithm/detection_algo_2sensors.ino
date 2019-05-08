@@ -1,6 +1,6 @@
 /*
 
-  InitialDetectorAlgorithm
+  2SensorDetectorAlgorithm
 
 
 
@@ -16,7 +16,7 @@
 
 
 
-  Bryn Davis
+  Bryn Davis,
 
 
 
@@ -28,25 +28,31 @@
 
 
 
-#define SensorInputPin A5    // Input pin number
+#define SensorInputPin1 A5    // Input pin number for sensor 1
 
-#define DigitalOutPin 13     // Output pin
+#define DigitalOutPin1 13     // Output pin for sensor 1
 
-#define SensorInputPin2 A4    // Input pin number
+#define SensorInputPin2 A0    // Input pin number for sensor 2
 
-#define DigitalOutPin2 12     // Output pin
+#define DigitalOutPin2 12     // Output pin for sensor 2
 
 
 // Setup parameters
 
-int sensor = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
+int sensor_1_type = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
 
-int debug_signals = 1;            // 1 to show signals over serial
+int sensor_2_type = 1;                   // 0 for Prostesis Avansada; 1 for OYMotion
 
-int sensor_number = 2;            // Number of sensors (1 or 2)
+int sensor_1_position = 0;               // 0 for bicep; 1 for forearm
+
+int sensor_2_position = 1;               // 0 for bicep; 1 for forearm
+
+int debug_signals = 1;                   // 1 to show signals over serial; 0 to not
+
+int sensor_number = 2;                   // Number of sensors (1 or 2)
 
 
-// Fixed parameters
+// Fixed parameters for all sensor positions and types
 
 float background_frequency = 0.2; // Change rate to be considered background (Hz)
 
@@ -56,61 +62,82 @@ float fall_time = 1000;           // Signal must be low this long for 1 -> 0 (ms
 
 
 
-// Variable parameters we'll change in setup
+// Variable parameters we'll change in setup for sensor position and type
 
-float threshold;                     // Voltage above background to register signal
+float threshold1;                     // Voltage above background to register signal
 
-float rise_time;                     // Must see signal this long for 0 -> 1 (ms)
+float threshold2;
 
-float background_timeout;            // Max time to not calculate background (ms)
+float rise_time1;                     // Must see signal this long for 0 -> 1 (ms)
 
-float threshold_oy = .25;            
+float rise_time2;
 
-float rise_time_oy = 2;      
+float background_timeout1;            // Max time to not calculate background (ms)
 
-float background_timeout_oy = 5000;  
+float background_timeout2;
 
-float threshold_pa = .5;         
+float threshold_oy_bicep = .25;            
 
-float rise_time_pa = 100;    
+float rise_time_oy_bicep = 2;      
 
-float background_timeout_pa = 5000; 
+float background_timeout_oy_bicep = 5000;  
+
+float threshold_oy_forearm = .25;            
+
+float rise_time_oy_forearm = 2;      
+
+float background_timeout_oy_forearm = 5000; 
+
+float threshold_pa_bicep = .5;         
+
+float rise_time_pa_bicep = 100;    
+
+float background_timeout_pa_bicep = 5000; 
+
+float threshold_pa_forearm = .5;         
+
+float rise_time_pa_forearm = 100;    
+
+float background_timeout_pa_forearm = 5000; 
 
 
 
 // Initialization
 
-int state = 0;                 // 0 for no signal; 1 for signal
+int state1 = 0;                 // 0 for no signal; 1 for signal
 
 int state2 =0;
 
-float background = 0;          // Tracks background level
+float background1 = 0;          // Tracks background level
 
 float background2 = 0;
 
-bool high_now = false;         // Whether the instaneous signal is high
+bool high_now1 = false;         // Whether the instaneous signal is high
 
 bool high_now2 = false; 
 
-int last_low = 0;              // Time (ms) of last observed low
+int last_low1 = 0;              // Time (ms) of last observed low
 
 int last_low2 = 0;
 
-int last_high = 0;             // Time (ms) of last observed high
+int last_high1 = 0;             // Time (ms) of last observed high
 
 int last_high2 = 0;
 
-int last_background = 0;       // Time (ms) of contributing background
+int last_background1 = 0;       // Time (ms) of contributing background
 
 int last_background2 = 0;
 
-int current_time = 0;          // Tracking loop time (ms)
+int current_time1 = 0;          // Tracking loop time (ms)
 
-int previous_time = 0;         // Stores the previous time for rate calculations
+int current_time2 = 0;
 
-float emg_signal;              // Current signal 
+int previous_time1 = 0;         // Stores the previous time for rate calculations
 
-float emg_signal2;             //Current signal of second sensor
+float emg_signal1;              // Current signal 
+
+float emg_signal_2;             //Current signal of second sensor
+
 
 // create a one pole filter to estimate background
 
@@ -136,42 +163,92 @@ void setup() {
 
 
 
-  // Initialize the on-board LED (will use it to show state)
 
-  pinMode(LED_BUILTIN, OUTPUT);
+  // Initialize a digital output for hand-off to robotics (use LED in practice)
 
-
-
-  // Initialize a digital output for hand-off to robotics
-
-  pinMode(DigitalOutPin, OUTPUT); 
+  pinMode(DigitalOutPin1, OUTPUT); 
+  pinMode(DigitalOutPin2, OUTPUT);
 
 
+  // Set sensor and position specific parameters for each sensor
 
-  // Set sensor specific parameters (TODO - Figure out how to do this only once)
+  if ((sensor_1_type == 0)&&(sensor_1_position == 0)){
 
-  if (sensor == 0){
+    threshold1 = threshold_pa_bicep;
 
-    threshold = threshold_pa;
+    rise_time1 = rise_time_pa_bicep; 
 
-    rise_time = rise_time_pa; 
-
-    background_timeout = background_timeout_pa;
+    background_timeout1 = background_timeout_pa_bicep;
 
   }
 
-  else if (sensor == 1){
+  else if ((sensor_1_type == 0)&&(sensor_1_position == 1)){
 
-    threshold = threshold_oy;
+    threshold1 = threshold_pa_forearm;
 
-    rise_time = rise_time_oy; 
+    rise_time1 = rise_time_pa_forearm; 
 
-    background_timeout = background_timeout_oy;
+    background_timeout1 = background_timeout_pa_forearm; 
+
+   }
+    
+  else if ((sensor_1_type == 1)&&(sensor_1_position == 0)){
+
+    threshold1 = threshold_oy_bicep;
+
+    rise_time1 = rise_time_oy_bicep; 
+
+    background_timeout1 = background_timeout_oy_bicep; 
+
+   }  
+   else if ((sensor_1_type == 1)&&(sensor_1_position == 1)){
+
+    threshold1 = threshold_oy_forearm;
+
+    rise_time1 = rise_time_oy_forearm; 
+
+    background_timeout1 = background_timeout_oy_forearm; 
+
+    }
+
+  if ((sensor_2_type == 0)&&(sensor_2_position == 0)){
+
+    threshold2 = threshold_pa_bicep;
+
+    rise_time2 = rise_time_pa_bicep; 
+
+    background_timeout2 = background_timeout_pa_bicep;
 
   }
 
+  else if ((sensor_2_type == 0)&&(sensor_2_position == 1)){
 
+    threshold2 = threshold_pa_forearm;
 
+    rise_time2 = rise_time_pa_forearm; 
+
+    background_timeout2 = background_timeout_pa_forearm; 
+
+   }
+    
+  else if ((sensor_2_type == 1)&&(sensor_2_position == 0)){
+
+    threshold2 = threshold_oy_bicep;
+
+    rise_time2 = rise_time_oy_bicep; 
+
+    background_timeout2 = background_timeout_oy_bicep; 
+
+   }  
+   else if ((sensor_2_type == 1)&&(sensor_2_position == 1)){
+
+    threshold2 = threshold_oy_forearm;
+
+    rise_time2 = rise_time_oy_forearm; 
+
+    background_timeout2 = background_timeout_oy_forearm; 
+
+    }
 }
 
 
@@ -181,68 +258,69 @@ void setup() {
 void loop() {
 
   
+//Sensor 1:
 
-  // read the input:
+// read the input
 
-  int sensorValue = analogRead(SensorInputPin);
-  int sensorValue2 = analogRead(SensorInputPin2);
-  current_time = millis();
+int sensorValue1 = analogRead(SensorInputPin1);
+  current_time1 = millis();
+
 
 
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
 
-  float voltage = sensorValue * (5.0 / 1023.0);
-  float voltage2 = sensorValue2 * (5.0 / 1023.0);
+  float voltage1 = sensorValue1 * (5.0 / 1023.0);
+
 
 
   // do low pass filtering
 
+ 
   if (ceiling_frequency == 0){     // Do nothing
 
-    emg_signal = voltage;
-    emg_signal2 = voltage2;
+    emg_signal1 = voltage1;
+
   }
 
   else {                           // Filter out high frequencies
 
-    emg_signal = lowpassFilter.input(voltage);    
-    emg_signal2 = lowpassFilter.input(voltage2);
+    emg_signal1 = lowpassFilter.input(voltage1);    
   }
 
 
 
   // Do accounting based on whether we are exceeding threshold
 
-  if (sensor == 0){
+  if (sensor_1_type == 0){
 
-    high_now = (emg_signal - background) > threshold;
+    high_now1 = (emg_signal1 - background1) > threshold1;
   }
 
-  else if (sensor == 1){
+  else if (sensor_1_type == 1){
 
-    high_now = abs(emg_signal - background) > threshold;
+    high_now1 = abs(emg_signal1 - background1) > threshold1;
   }
 
-  if (high_now) {
+  if (high_now1) {
 
-    last_high = current_time;
+    last_high1 = current_time1;
 
   }
 
   else {
 
-    last_low = current_time;
+    last_low1 = current_time1;
 
   }
 
 
   // Determine the state 
 
-  if (high_now) {
+  if (high_now1) {
 
-    if ((current_time - last_low) > rise_time) {
+    if ((current_time1 - last_low1) > rise_time1) {
 
-      state = 1;
+      state1 = 1;
 
     }
 
@@ -250,54 +328,76 @@ void loop() {
 
   else {     // not high_now
 
-    if ((current_time - last_high) > fall_time) {
+    if ((current_time1 - last_high1) > fall_time) {
 
-      state = 0;
+      state1 = 0;
 
     }
 
   }
   // Track the background
 
-  if ((state == 0) and not high_now){
+  if ((state1 == 0) and not high_now1){
 
-    background = backgroundFilter.input(emg_signal);
+    background1 = backgroundFilter.input(emg_signal1);
 
-    last_background = current_time;
+    last_background1 = current_time1;
 
     }
 
-  else if (current_time - last_background > background_timeout){
+  else if (current_time1 - last_background1 > background_timeout1){
 
-    background = backgroundFilter.input(emg_signal);      
+    background1 = backgroundFilter.input(emg_signal1);      
 
   }
-  
+
+//code for the second sensor if two grips are required (only runs when snesor_number ==2)
+
 if (sensor_number == 2){
-  
 
-if (sensor == 0){
+//read the input of sensor 2
   
-    high_now2 = (emg_signal2 - background2) > threshold;
+ int sensorValue2 = analogRead(SensorInputPin2);
+ current_time2 = millis();
+
+// Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+
+ float voltage2 = sensorValue2 * (5.0 / 1023.0);
+ 
+
+  //low pass filtering
+  
+  if (ceiling_frequency == 0){     // Do nothing
+        emg_signal_2 = voltage2;
+  }
+ else {                           // Filter out high frequencies
+    
+    emg_signal_2 = lowpassFilter.input(voltage2);
   }
 
-  else if (sensor == 1){
+  // Do accounting based on whether we are exceeding threshold
+  
+if (sensor_2_type == 0){
+  
+    high_now2 = (emg_signal_2 - background2) > threshold2;
+  }
 
-    high_now2 = abs(emg_signal2 - background2) > threshold;
+  else if (sensor_2_type == 1){
+
+    high_now2 = abs(emg_signal_2 - background2) > threshold2;
   }
 
   if (high_now2) {
 
-    last_high2 = current_time;
+    last_high2 = current_time2;
 
   }
 
   else {
 
-    last_low2 = current_time;
+    last_low2 = current_time2;
 
   }
-
 
 
   // Determine the state 
@@ -305,7 +405,7 @@ if (sensor == 0){
 
   if (high_now2) {
 
-    if ((current_time - last_low2) > rise_time) {
+    if ((current_time2 - last_low2) > rise_time2) {
 
       state2 = 1;
 
@@ -315,7 +415,7 @@ if (sensor == 0){
 
   else {     // not high_now
 
-    if ((current_time - last_high2) > fall_time) {
+    if ((current_time2 - last_high2) > fall_time) {
 
       state2 = 0;
 
@@ -328,31 +428,32 @@ if (sensor == 0){
 
   if ((state2 == 0) and not high_now2){
 
-    background2 = backgroundFilter.input(emg_signal2);
+    background2 = backgroundFilter.input(emg_signal_2);
 
-    last_background2 = current_time;
+    last_background2 = current_time2;
 
     }
 
-  else if (current_time - last_background2 > background_timeout){
+  else if (current_time2 - last_background2 > background_timeout2){
 
-    background2 = backgroundFilter.input(emg_signal2);      
+    background2 = backgroundFilter.input(emg_signal_2);      
 
   }
 
 }
   
-else {}
+else {}    //dont bother about the second sensor
 
-  // Print out the signal values
+  
+  // Print out the signal values of sesnsor 2
 
   if (debug_signals == 1){
 
-     Serial.print(emg_signal);
+     Serial.print(emg_signal1);
 
      Serial.print("   ");
 
-     Serial.print(state);
+     Serial.print(state1);
 
      Serial.print("   ");
 
@@ -360,18 +461,19 @@ else {}
 
   // Serial.print("   ");
 
-     Serial.print(background);
+     Serial.print(background1);
 
      Serial.print("   ");
 
   }
 
+  //print out signal values of sensor 2
+  
 if ((debug_signals == 1) && (sensor_number == 2)){
 
   
-  if (debug_signals == 1){
 
-     Serial.print(emg_signal2);
+     Serial.print(emg_signal_2);
 
      Serial.print("   ");
 
@@ -390,29 +492,32 @@ if ((debug_signals == 1) && (sensor_number == 2)){
 
   // Track the speed (in hundreds of Hz to keep similar scale)
 
-  float rate = 10. / (current_time - previous_time);
+  float rate = 10. / (current_time1 - previous_time1);
 
-  previous_time = current_time;
+  previous_time1 = current_time1;
 
   Serial.println(rate);
 
   
 
-  // Control the digital outputs
+  // Control the digital outputs linked to sesnsor 1
 
-  if (state == 1){
+  if (state1 == 1){
 
-    digitalWrite(DigitalOutPin, HIGH);
+    digitalWrite(DigitalOutPin1, HIGH);
 
   }
 
   else {
 
-    digitalWrite(DigitalOutPin, LOW);
+    digitalWrite(DigitalOutPin1, LOW);
 
   }
 
- if (state2 == 1){
+ // Control the digital outputs linked to sesnsor 1. Here, the digital pin for sensor2 only fires if esnsor1 is not exceding the threshold.
+
+  
+ if ((state2 == 1)&&(state1 == 0)){
 
     digitalWrite(DigitalOutPin2, HIGH);
 
@@ -420,11 +525,10 @@ if ((debug_signals == 1) && (sensor_number == 2)){
 
   else {
 
-    digitalWrite(DigitalOutPin, LOW);
+    digitalWrite(DigitalOutPin2, LOW);
 
   }
 
   
 
-}
 }
