@@ -19,17 +19,22 @@
 #define servoPin2 11
 #define lockSwitchPin 10
 #define buttonPin A1
-#define sensorPin A0    // Input pin number
-#define sensorPin2 A2
+#define sensorPin A0          // EMG sensor 1, corresponds to servo 1 closing first
+#define sensorPin2 A2         // EMG sensor 2, corresponds to servo 2 closing first
 
 // Set constants
 const int OPEN_POS = 0;
-const int CLOSED_POS = 140;
-const int OPEN_POS2 = 0;
-const int CLOSED_POS2 = 180;
-const int servoDelayTime = 500;
+const int CLOSED_POS_GRIP1 = 180;
+const int CLOSED_POS_GRIP2 = 180;
+const int OPEN_POS2 = 180;
+const int CLOSED_POS2_GRIP1 = 0;
+const int CLOSED_POS2_GRIP2 = 0;
+const int DELAY_TIME_GRIP1 = 300;
+const int DELAY_TIME_GRIP2 = 300;
+const int SERVO_TIMEOUT_TIME = 1500; // Time after which the servos will stop trying to turn and the arm will be available for another grip
 const int lockSwitchDelayTime = 20; // Lockswitch debouncing constants
 const int lockSwitchCounterLimit = 30; // Lockswitch debouncing constants
+const int secondInputLedFlashDelay = 300;
 
 // Initialise variables
 boolean state = 0;                 // 0 for no signal; 1 for signal
@@ -37,15 +42,14 @@ boolean state2 = 0;
 boolean prevState = 0;
 boolean prevState2 = 0;
 boolean motorState = 0;            // 0 for open hand; 1 for closed hand
-////// ----- Add motorstate2???
 boolean lockSwitchState = 0;
 int motorValue = OPEN_POS;
 int motorValue2 = OPEN_POS2;
 int lockSwitchCounter = 0;  // Debouncing
 
 // Setup parameters
-boolean buttonFlag = 0; // 0 to use EMG sensors; 1 to use button
-boolean lockSwitchFlag = 1; // 0 to ignore lockswitch; 1 to use lockswitch
+boolean buttonFlag = 1; // 0 to use EMG sensors; 1 to use button
+boolean lockSwitchFlag = 0; // 0 to have lockswitch toggle between which EMG signal the button simulates; 1 to use lockswitch as a lock switch
 boolean motorFlag1 = 1; // 0 to disable motor; 1 to enable
 boolean motorFlag2 = 1; // 0 to disable motor; 1 to enable
 
@@ -55,19 +59,19 @@ boolean lockSwitchDebugging = 0;
 
 
 // Create servo objects
-Servo Servo1;
-Servo Servo2;
+Servo servo;
+Servo servo2;
 
 // Function declaration
 void EMGSetup();
 void EMG();
-void servos();
+void servos(int gripNumber);
 void readLockSwitch();
 
 // ---------EMG setup----------
 // Setup parameters
-int sensorType = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
-int sensorType2 = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
+boolean sensorType = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
+boolean sensorType2 = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
 int sensorFlag = 1;                    // 0 to disable sensor; 1 for bicep; 2 for foreearm
 int sensorFlag2 = 2;                   // 0 for disable sensor; 1 for bicep; 2 for forearm
 
@@ -115,11 +119,11 @@ int current_time2 = 0;          // Tracking loop time (ms)
 int previous_time2 = 0;         // Stores the previous time for rate calculations
 float emg_signal2;              // Current signal
 
-// create a one pole filter to estimate background
+// create one pole filters to estimate background
 FilterOnePole backgroundFilter(LOWPASS, background_frequency);
 FilterOnePole backgroundFilter2(LOWPASS, background_frequency);
 
-// create a filter to remove high frequency noise
+// create filters to remove high frequency noise
 FilterOnePole lowpassFilter(LOWPASS, ceiling_frequency);
 FilterOnePole lowpassFilter2(LOWPASS, ceiling_frequency);
 
@@ -133,13 +137,13 @@ void setup() {
 
   // Initialise servos
   if (motorFlag1) {
-    Servo1.attach(servoPin);
-    Servo1.write(motorValue);
+    servo.attach(servoPin);
+    servo.write(motorValue);
   }
 
   if (motorFlag2) {
-    Servo2.attach(servoPin2);
-    Servo2.write(motorValue2);
+    servo2.attach(servoPin2);
+    servo2.write(motorValue2);
   }
 
   // Initialise button and lockSwitch
@@ -153,21 +157,26 @@ void setup() {
 // the loop routine runs over and over
 void loop() {
   // Read in lockswitch values and debounce
-  if (lockSwitchFlag) {
-    readLockSwitch();
-  }
+  readLockSwitch();
 
   // If lockswitch is off then then process input data and activate motors accordingly
-  // If lockswitch is on, do nothing
-  if (lockSwitchCounter < lockSwitchCounterLimit) {
+  // If lockswitch is on & lockSwitchFlag is high, do nothing
+  if ((!lockSwitchFlag) || (lockSwitchCounter < lockSwitchCounterLimit)) {
     // Save previous state
     prevState = state;
     prevState2 = state2;
 
     // Read in new state from either button or EMG sensor(s)
     if (buttonFlag) {
-      state = digitalRead(buttonPin);
-      state2 = digitalRead(buttonPin);
+      if (lockSwitchFlag) {
+        state = digitalRead(buttonPin);
+      } else {
+        if (lockSwitchCounter < lockSwitchCounterLimit) {
+          state = digitalRead(buttonPin);
+        } else {
+          state2 = digitalRead(buttonPin);
+        }
+      }
     } else {
       if (sensorFlag) {
         EMG();
@@ -179,34 +188,31 @@ void loop() {
     }
 
     // Print state values to onbaord LED for debugging purposes
-    if (state) {
+    if (state || state2) {
       digitalWrite(LED_BUILTIN, HIGH);
-    }
-    else {
+    } else {
       digitalWrite(LED_BUILTIN, LOW);
     }
-//
-//    // Check EMG signal state, and if we are on a rising edge then toggle motor state
-//    if ((!prevState) && (state)) {
-//      // Print messages to serial for debugging purposes
-//      if (buttonFlag) {
-//        Serial.println("Button Pushed");
-//      } else {
-//        Serial.println("EMG signal rising edge");
-//      }
-//      //servos();
-//    }
-//
-//    // Check EMG signal state, and if we are on a rising edge then toggle motor state
-//    if ((!prevState2) && (state2)) {
-//      // Print messages to serial for debugging purposes
-//      if (buttonFlag) {
-//        Serial.println("Button Pushed");
-//      } else {
-//        Serial.println("EMG signal 2 rising edge");
-//      }
-//      //servos();
-//    }
+
+    // Check EMG signal state, and if we are on a rising edge then toggle motor state
+    // NOTE: EMG signal 1 has priority, if EMG signal 1 is on a rising edge then we will not check EMG signal 2
+    if ((!prevState) && (state)) {
+      // Print messages to serial for debugging purposes
+      if (buttonFlag) {
+        Serial.println("Button Pushed");
+      } else {
+        Serial.println("EMG signal rising edge");
+      }
+      servos(1);
+    } else if ((!prevState2) && (state2)) {
+      // Print messages to serial for debugging purposes
+      if (buttonFlag) {
+        Serial.println("Button Pushed 2");
+      } else {
+        Serial.println("EMG signal 2 rising edge");
+      }
+      servos(2);
+    }
   }
 }
 
@@ -266,7 +272,7 @@ void EMG() {
   float voltage = sensorValue * (5.0 / 1023.0);
 
   // do low pass filtering
-  if (ceiling_frequency == 0) {    // Do nothing
+  if (!ceiling_frequency) {    // Do nothing
     emg_signal = voltage;
   }
   else {                           // Filter out high frequencies
@@ -274,7 +280,7 @@ void EMG() {
   }
 
   // Do accounting based on whether we are exceeding threshold
-  if (sensorType == 0) {
+  if (!sensorType) {
     high_now = (emg_signal - background) > threshold;
   }
   else if (sensorType == 1) {
@@ -300,7 +306,7 @@ void EMG() {
   }
 
   // Track the background
-  if ((state == 0) and not high_now) {
+  if (!state && !high_now) {
     background = backgroundFilter.input(emg_signal);
     last_background = current_time;
   }
@@ -310,10 +316,10 @@ void EMG() {
 
   // Track the speed (in hundreds of Hz to keep similar scale)
   float rate = 10. / (current_time - previous_time2);
-  previous_time2 = current_time;
+  previous_time = current_time;
 
   // Print out the signal values
-  if (EMGDebugging == 1) {
+  if (EMGDebugging) {
     Serial.print(emg_signal);
     Serial.print("   ");
     Serial.print(state);
@@ -334,7 +340,7 @@ void EMG2() {
   float voltage2 = sensorValue2 * (5.0 / 1023.0);
 
   // do low pass filtering
-  if (ceiling_frequency == 0) {    // Do nothing
+  if (!ceiling_frequency) {    // Do nothing
     emg_signal2 = voltage2;
   }
   else {                           // Filter out high frequencies
@@ -342,7 +348,7 @@ void EMG2() {
   }
 
   // Do accounting based on whether we are exceeding threshold
-  if (sensorType2 == 0) {
+  if (!sensorType2) {
     high_now2 = (emg_signal2 - background2) > threshold2;
   }
   else if (sensorType2 == 1) {
@@ -368,7 +374,7 @@ void EMG2() {
   }
 
   // Track the background
-  if ((state2 == 0) and not high_now2) {
+  if (!state2 && !high_now2) {
     background2 = backgroundFilter2.input(emg_signal2);
     last_background2 = current_time2;
   }
@@ -381,7 +387,7 @@ void EMG2() {
   previous_time2 = current_time2;
 
   // Print out the signal values
-  if (EMGDebugging == 1) {
+  if (EMGDebugging) {
     Serial.print(emg_signal2);
     Serial.print("   ");
     Serial.print(state2);
@@ -393,30 +399,61 @@ void EMG2() {
   }
 }
 
-void servos() {
+void servos(int gripNumber) {
   // Toggle hand position
   if (motorState) { // If motor state = 1 (hand currently closed) then open hand
     motorValue = OPEN_POS;
     motorValue2 = OPEN_POS2;
     Serial.println("Opening hand..."); // Debugging
+    // Write to active motors
+    if (motorFlag1) {
+      servo.attach(servoPin);
+      servo.write(motorValue);
+    }
+    if (motorFlag2) {
+      servo2.attach(servoPin2);
+      servo2.write(motorValue2);
+    }
+    delay(300);
     motorState = 0;
-  } else { // If motor state = 0 (hand currently open) then close hand
-    motorValue = CLOSED_POS;
-    motorValue2 = CLOSED_POS2;
-    Serial.println("Closing hand..."); // Debugging
+  } else { // If motor state = 0 (hand currently open) then close hand to specified grip
+    if (gripNumber == 1) {
+      motorValue = CLOSED_POS_GRIP1;
+      motorValue2 = CLOSED_POS2_GRIP1;
+      Serial.println("Closing hand Grip #1..."); // Debugging
+
+      // Write to active motors
+      if (motorFlag1) {
+        servo.attach(servoPin);
+        servo.write(motorValue);
+      }
+      delay(DELAY_TIME_GRIP1);
+      if (motorFlag2) {
+        servo2.attach(servoPin2);
+        servo2.write(motorValue2);
+      }
+    } else if (gripNumber == 2) {
+      motorValue = CLOSED_POS_GRIP2;
+      motorValue2 = CLOSED_POS2_GRIP2;
+      Serial.println("Closing hand Grip #2..."); // Debugging
+
+      // Write to active motors
+      if (motorFlag2) {
+        servo2.attach(servoPin2);
+        servo2.write(motorValue2);
+      }
+      delay(DELAY_TIME_GRIP2);
+      if (motorFlag1) {
+        servo.attach(servoPin);
+        servo.write(motorValue);
+      }
+    }
     motorState = 1;
   }
 
-  // Write to active motors
-  if (motorFlag1) {
-    Servo1.write(motorValue);
-  }
-
-  if (motorFlag2) {
-    Servo2.write(motorValue2);
-  }
-
-  delay(servoDelayTime);
+  delay(SERVO_TIMEOUT_TIME);
+  servo.detach();
+  servo2.detach();
 }
 
 void readLockSwitch() {
