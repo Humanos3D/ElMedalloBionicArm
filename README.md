@@ -1,7 +1,5 @@
 # Robotic Arm
 
-Project for development of the robotic arm  
+Please click [here](https://github.com/enable-medellin/robotic-arm/wiki/Complete-Prototypes) for a full list of available documentation on the latest design of the bioonic arm by [e-NABLE Medellín](https://e-nablemedellin.com/en/home/) (completed May 2019).
 
-Note that the Github discussion has been moved [here](https://github.com/enable-medellin/general/wiki/Github)
-
-Test
+Please see the [Wiki](https://github.com/enable-medellin/robotic-arm/wiki) for additional development notes.
