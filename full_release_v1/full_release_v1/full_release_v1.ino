@@ -24,17 +24,16 @@
 
 // Set constants
 const int OPEN_POS = 0;
-const int CLOSED_POS_GRIP1 = 180;
+const int CLOSED_POS_GRIP1 = 180; // Motor angles in degrees
 const int CLOSED_POS_GRIP2 = 180;
 const int OPEN_POS2 = 180;
 const int CLOSED_POS2_GRIP1 = 0;
 const int CLOSED_POS2_GRIP2 = 0;
-const int DELAY_TIME_GRIP1 = 300;
+const int DELAY_TIME_GRIP1 = 300;  // Delay in milliseconds
 const int DELAY_TIME_GRIP2 = 300;
 const int SERVO_TIMEOUT_TIME = 1500; // Time after which the servos will stop trying to turn and the arm will be available for another grip
 const int lockSwitchDelayTime = 20; // Lockswitch debouncing constants
 const int lockSwitchCounterLimit = 30; // Lockswitch debouncing constants
-const int secondInputLedFlashDelay = 300;
 
 // Initialise variables
 boolean state = 0;                 // 0 for no signal; 1 for signal
