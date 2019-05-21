@@ -47,13 +47,13 @@ int motorValue2 = OPEN_POS2;
 int lockSwitchCounter = 0;  // Debouncing
 
 // Setup parameters
-boolean buttonFlag = 1; // 0 to use EMG sensors; 1 to use button
+boolean buttonFlag = 0; // 0 to use EMG sensors; 1 to use button
 boolean lockSwitchFlag = 0; // 0 to have lockswitch toggle between which EMG signal the button simulates; 1 to use lockswitch as a lock switch
 boolean motorFlag1 = 1; // 0 to disable motor; 1 to enable
 boolean motorFlag2 = 1; // 0 to disable motor; 1 to enable
 
 // Debugging options - 1 to show signals over serial interface (to viewed by Serial Monitor or Serial Plotter)
-boolean EMGDebugging = 1;
+boolean EMGDebugging = 0;
 boolean lockSwitchDebugging = 0;
 
 
@@ -71,8 +71,8 @@ void readLockSwitch();
 // Setup parameters
 boolean sensorType = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
 boolean sensorType2 = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
-int sensorFlag = 1;                    // 0 to disable sensor; 1 for bicep; 2 for foreearm
-int sensorFlag2 = 2;                   // 0 for disable sensor; 1 for bicep; 2 for forearm
+int sensorFlag = 2;                    // 0 to disable sensor; 1 for bicep; 2 for foreearm
+int sensorFlag2 = 1;                   // 0 for disable sensor; 1 for bicep; 2 for forearm
 
 // Fixed parameters
 float background_frequency = 0.2; // Change rate to be considered background (Hz)
@@ -92,7 +92,7 @@ float background_timeout_oy_forearm = 5000;
 float threshold_pa_forearm = .5;
 float rise_time_pa_forearm = 100;
 float background_timeout_pa_forearm = 5000;
-float threshold_oy_bicep = .25;
+float threshold_oy_bicep = .01;
 float rise_time_oy_bicep = 2;
 float background_timeout_oy_bicep = 5000;
 float threshold_pa_bicep = .5;
