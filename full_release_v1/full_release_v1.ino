@@ -338,7 +338,7 @@ void EMG() {
   }
 
   // Track the speed (in hundreds of Hz to keep similar scale)
-  float rate = 10. / (current_time - previous_time2);
+  float rate = 10. / (current_time - previous_time);
   previous_time = current_time;
 
   // Print out the signal values
