@@ -35,6 +35,12 @@ const int SERVO_TIMEOUT_TIME = 1500; // Time after which the servos will stop tr
 const int lockSwitchDelayTime = 20; // Lockswitch debouncing constants
 const int lockSwitchCounterLimit = 30; // Lockswitch debouncing constants
 
+// Setup parameters
+boolean buttonFlag = 1; // 0 to use EMG sensors; 1 to use button
+boolean lockSwitchFlag = 0; // 0 to have lockswitch toggle between which EMG signal the button simulates; 1 to use lockswitch as a lock switch
+boolean motorFlag1 = 1; // 0 to disable motor; 1 to enable
+boolean motorFlag2 = 1; // 0 to disable motor; 1 to enable
+
 // Initialise variables
 boolean state = 0;                 // 0 for no signal; 1 for signal
 boolean state2 = 0;
@@ -45,12 +51,6 @@ boolean lockSwitchState = 0;
 int motorValue = OPEN_POS;
 int motorValue2 = OPEN_POS2;
 int lockSwitchCounter = 0;  // Debouncing
-
-// Setup parameters
-boolean buttonFlag = 0; // 0 to use EMG sensors; 1 to use button
-boolean lockSwitchFlag = 0; // 0 to have lockswitch toggle between which EMG signal the button simulates; 1 to use lockswitch as a lock switch
-boolean motorFlag1 = 1; // 0 to disable motor; 1 to enable
-boolean motorFlag2 = 1; // 0 to disable motor; 1 to enable
 
 // Debugging options - 1 to show signals over serial interface (to viewed by Serial Monitor or Serial Plotter)
 boolean EMGDebugging = 0;
