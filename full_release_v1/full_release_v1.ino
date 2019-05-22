@@ -287,7 +287,7 @@ void EMG() {
   }
 
   // Do accounting based on whether we are exceeding threshold
-  int trigger_threshhold;
+  float trigger_threshhold;
   if (!sensorType) {
     trigger_threshhold = (emg_signal - background);
     high_now = trigger_threshhold > threshold;
@@ -360,7 +360,7 @@ void EMG2() {
   }
 
   // Do accounting based on whether we are exceeding threshold
-  int trigger_threshhold;
+  float trigger_threshhold;
   if (!sensorType2) {
     trigger_threshhold = (emg_signal2 - background2);
     high_now2 = trigger_threshhold > threshold2;
