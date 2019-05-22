@@ -22,17 +22,21 @@
 #define sensorPin A0          // EMG sensor 1, corresponds to servo 1 closing first
 #define sensorPin2 A2         // EMG sensor 2, corresponds to servo 2 closing first
 
+// Debugging options - 1 to show signals over serial interface (to viewed by Serial Monitor or Serial Plotter)
+boolean EMGDebugging = 0;
+boolean lockSwitchDebugging = 0;
+
 // Set constants
-const int OPEN_POS = 0;
-const int CLOSED_POS_GRIP1 = 180; // Motor angles in degrees
+const int OPEN_POS = 0;                // Motor angles in degrees
+const int CLOSED_POS_GRIP1 = 180;
 const int CLOSED_POS_GRIP2 = 180;
 const int OPEN_POS2 = 180;
 const int CLOSED_POS2_GRIP1 = 0;
 const int CLOSED_POS2_GRIP2 = 0;
-const int DELAY_TIME_GRIP1 = 300;  // Delay in milliseconds
+const int DELAY_TIME_GRIP1 = 300;      // Delay in milliseconds
 const int DELAY_TIME_GRIP2 = 300;
-const int SERVO_TIMEOUT_TIME = 1500; // Time after which the servos will stop trying to turn and the arm will be available for another grip
-const int lockSwitchDelayTime = 20; // Lockswitch debouncing constants
+const int SERVO_TIMEOUT_TIME = 1500;   // Time after which the servos will stop trying to turn and the arm will be available for another grip
+const int lockSwitchDelayTime = 20;    // Lockswitch debouncing constants
 const int lockSwitchCounterLimit = 30; // Lockswitch debouncing constants
 
 // Setup parameters
@@ -51,11 +55,6 @@ boolean lockSwitchState = 0;
 int motorValue = OPEN_POS;
 int motorValue2 = OPEN_POS2;
 int lockSwitchCounter = 0;  // Debouncing
-
-// Debugging options - 1 to show signals over serial interface (to viewed by Serial Monitor or Serial Plotter)
-boolean EMGDebugging = 1;
-boolean lockSwitchDebugging = 0;
-
 
 // Create servo objects
 Servo servo;
@@ -108,7 +107,7 @@ int last_background = 0;       // Time (ms) of contributing background
 int current_time = 0;          // Tracking loop time (ms)
 int previous_time = 0;         // Stores the previous time for rate calculations
 float emg_signal;              // Current signal
-float trigger_threshhold;
+float transient_signal;
 float background2 = 0;          // Tracks background level
 bool high_now2 = false;         // Whether the instaneous signal is high
 int last_low2 = 0;              // Time (ms) of last observed low
@@ -117,7 +116,7 @@ int last_background2 = 0;       // Time (ms) of contributing background
 int current_time2 = 0;          // Tracking loop time (ms)
 int previous_time2 = 0;         // Stores the previous time for rate calculations
 float emg_signal2;              // Current signal
-float trigger_threshhold2;
+float transient_signal2;
 
 // create one pole filters to estimate background
 FilterOnePole backgroundFilter(LOWPASS, background_frequency);
@@ -289,12 +288,12 @@ void EMG() {
 
   // Do accounting based on whether we are exceeding threshold
   if (!sensorType) {
-    trigger_threshhold = (emg_signal - background);
-    high_now = trigger_threshhold > threshold;
+    transient_signal = (emg_signal - background);
+    high_now = transient_signal > threshold;
   }
   else if (sensorType == 1) {
-    trigger_threshhold = abs(emg_signal - background);
-    high_now = trigger_threshhold > threshold;
+    transient_signal = abs(emg_signal - background);
+    high_now = transient_signal > threshold;
   }
   if (high_now) {
     last_high = current_time;
@@ -336,7 +335,7 @@ void EMG() {
     Serial.print("\t");
     Serial.print(background);
     Serial.print("\t");
-    Serial.print(trigger_threshhold);
+    Serial.print(transient_signal);
     Serial.print("\t");
   }
 }
@@ -359,12 +358,12 @@ void EMG2() {
 
   // Do accounting based on whether we are exceeding threshold
   if (!sensorType2) {
-    trigger_threshhold2 = (emg_signal2 - background2);
-    high_now2 = trigger_threshhold2 > threshold2;
+    transient_signal2 = (emg_signal2 - background2);
+    high_now2 = transient_signal2 > threshold2;
   }
   else if (sensorType2 == 1) {
-    trigger_threshhold2 = abs(emg_signal2 - background2);
-    high_now2 = trigger_threshhold2 > threshold2;
+    transient_signal2 = abs(emg_signal2 - background2);
+    high_now2 = transient_signal2 > threshold2;
   }
   if (high_now2) {
     last_high2 = current_time2;
@@ -406,7 +405,7 @@ void EMG2() {
     Serial.print("\t");
     Serial.print(background2);
     Serial.print("\t");
-    Serial.println(trigger_threshhold2);
+    Serial.println(transient_signal2);
   }
 }
 
