@@ -36,8 +36,8 @@ const int lockSwitchDelayTime = 20; // Lockswitch debouncing constants
 const int lockSwitchCounterLimit = 30; // Lockswitch debouncing constants
 
 // Setup parameters
-boolean buttonFlag = 1; // 0 to use EMG sensors; 1 to use button
-boolean lockSwitchFlag = 0; // 0 to have lockswitch toggle between which EMG signal the button simulates; 1 to use lockswitch as a lock switch
+boolean buttonFlag = 0; // 0 to use EMG sensors; 1 to use button
+boolean lockSwitchFlag = 1; // 0 to have lockswitch toggle between which EMG signal the button simulates; 1 to use lockswitch as a lock switch
 boolean motorFlag1 = 1; // 0 to disable motor; 1 to enable
 boolean motorFlag2 = 1; // 0 to disable motor; 1 to enable
 
@@ -53,7 +53,7 @@ int motorValue2 = OPEN_POS2;
 int lockSwitchCounter = 0;  // Debouncing
 
 // Debugging options - 1 to show signals over serial interface (to viewed by Serial Monitor or Serial Plotter)
-boolean EMGDebugging = 0;
+boolean EMGDebugging = 1;
 boolean lockSwitchDebugging = 0;
 
 
@@ -92,7 +92,7 @@ float background_timeout_oy_forearm = 5000;
 float threshold_pa_forearm = .5;
 float rise_time_pa_forearm = 100;
 float background_timeout_pa_forearm = 5000;
-float threshold_oy_bicep = .01;
+float threshold_oy_bicep = .25;
 float rise_time_oy_bicep = 2;
 float background_timeout_oy_bicep = 5000;
 float threshold_pa_bicep = .5;
@@ -198,24 +198,27 @@ void loop() {
       digitalWrite(LED_BUILTIN, LOW);
     }
 
+
     // Check EMG signal state, and if we are on a rising edge then toggle motor state
     // NOTE: EMG signal 1 has priority, if EMG signal 1 is on a rising edge then we will not check EMG signal 2
-    if ((!prevState) && (state)) {
-      // Print messages to serial for debugging purposes
-      if (buttonFlag) {
-        Serial.println("Button Pushed");
-      } else {
-        Serial.println("EMG signal rising edge");
+    if (!EMGDebugging) {
+      if ((!prevState) && (state)) {
+        // Print messages to serial for debugging purposes
+        if (buttonFlag) {
+          Serial.println("Button Pushed");
+        } else {
+          Serial.println("EMG signal rising edge");
+        }
+        servos(1);
+      } else if ((!prevState2) && (state2)) {
+        // Print messages to serial for debugging purposes
+        if (buttonFlag) {
+          Serial.println("Button Pushed 2");
+        } else {
+          Serial.println("EMG signal 2 rising edge");
+        }
+        servos(2);
       }
-      servos(1);
-    } else if ((!prevState2) && (state2)) {
-      // Print messages to serial for debugging purposes
-      if (buttonFlag) {
-        Serial.println("Button Pushed 2");
-      } else {
-        Serial.println("EMG signal 2 rising edge");
-      }
-      servos(2);
     }
   }
 }
@@ -284,11 +287,14 @@ void EMG() {
   }
 
   // Do accounting based on whether we are exceeding threshold
+  int trigger_threshhold;
   if (!sensorType) {
-    high_now = (emg_signal - background) > threshold;
+    trigger_threshhold = (emg_signal - background);
+    high_now = trigger_threshhold > threshold;
   }
   else if (sensorType == 1) {
-    high_now = abs(emg_signal - background) > threshold;
+    trigger_threshhold = abs(emg_signal - background);
+    high_now = trigger_threshhold > threshold;
   }
   if (high_now) {
     last_high = current_time;
@@ -330,6 +336,8 @@ void EMG() {
     Serial.print("   ");
     Serial.print(background);
     Serial.print("   ");
+    Serial.print(trigger_threshhold);
+    Serial.print("   ");
 
     Serial.print(rate);
   }
@@ -352,11 +360,14 @@ void EMG2() {
   }
 
   // Do accounting based on whether we are exceeding threshold
+  int trigger_threshhold;
   if (!sensorType2) {
-    high_now2 = (emg_signal2 - background2) > threshold2;
+    trigger_threshhold = (emg_signal2 - background2);
+    high_now2 = trigger_threshhold > threshold2;
   }
   else if (sensorType2 == 1) {
-    high_now2 = abs(emg_signal2 - background2) > threshold2;
+    trigger_threshhold = abs(emg_signal2 - background2);
+    high_now2 = trigger_threshhold > threshold2;
   }
   if (high_now2) {
     last_high2 = current_time2;
@@ -397,6 +408,8 @@ void EMG2() {
     Serial.print(state2);
     Serial.print("   ");
     Serial.print(background2);
+    Serial.print("   ");
+    Serial.print(trigger_threshhold);
     Serial.print("   ");
 
     Serial.println(rate2);
