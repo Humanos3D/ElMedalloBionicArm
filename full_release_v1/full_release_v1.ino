@@ -86,13 +86,13 @@ float rise_time;                     // Must see signal this long for 0 -> 1 (ms
 float rise_time2;                     // Must see signal this long for 0 -> 1 (ms)
 float background_timeout;            // Max time to not calculate background (ms)
 float background_timeout2;            // Max time to not calculate background (ms)
-float threshold_oy_forearm = .25;
+float threshold_oy_forearm = .53;
 float rise_time_oy_forearm = 2;
 float background_timeout_oy_forearm = 5000;
 float threshold_pa_forearm = .5;
 float rise_time_pa_forearm = 100;
 float background_timeout_pa_forearm = 5000;
-float threshold_oy_bicep = .25;
+float threshold_oy_bicep = .46;
 float rise_time_oy_bicep = 2;
 float background_timeout_oy_bicep = 5000;
 float threshold_pa_bicep = .5;
@@ -108,7 +108,7 @@ int last_background = 0;       // Time (ms) of contributing background
 int current_time = 0;          // Tracking loop time (ms)
 int previous_time = 0;         // Stores the previous time for rate calculations
 float emg_signal;              // Current signal
-
+float trigger_threshhold;
 float background2 = 0;          // Tracks background level
 bool high_now2 = false;         // Whether the instaneous signal is high
 int last_low2 = 0;              // Time (ms) of last observed low
@@ -117,6 +117,7 @@ int last_background2 = 0;       // Time (ms) of contributing background
 int current_time2 = 0;          // Tracking loop time (ms)
 int previous_time2 = 0;         // Stores the previous time for rate calculations
 float emg_signal2;              // Current signal
+float trigger_threshhold2;
 
 // create one pole filters to estimate background
 FilterOnePole backgroundFilter(LOWPASS, background_frequency);
@@ -161,8 +162,9 @@ void setup() {
 // the loop routine runs over and over
 void loop() {
   // Read in lockswitch values and debounce
-  readLockSwitch();
-
+  if (!EMGDebugging) {
+    readLockSwitch();
+  }
   // If lockswitch is off then then process input data and activate motors accordingly
   // If lockswitch is on & lockSwitchFlag is high, do nothing
   if ((!lockSwitchFlag) || (lockSwitchCounter < lockSwitchCounterLimit)) {
@@ -171,7 +173,7 @@ void loop() {
     prevState2 = state2;
 
     // Read in new state from either button or EMG sensor(s)
-    if (buttonFlag) {
+    if (buttonFlag && !EMGDebugging) {
       if (lockSwitchFlag) {
         state = digitalRead(buttonPin);
       } else {
@@ -287,7 +289,6 @@ void EMG() {
   }
 
   // Do accounting based on whether we are exceeding threshold
-  int trigger_threshhold;
   if (!sensorType) {
     trigger_threshhold = (emg_signal - background);
     high_now = trigger_threshhold > threshold;
@@ -331,15 +332,13 @@ void EMG() {
   // Print out the signal values
   if (EMGDebugging) {
     Serial.print(emg_signal);
-    Serial.print("   ");
+    Serial.print("\t");
     Serial.print(state);
-    Serial.print("   ");
+    Serial.print("\t");
     Serial.print(background);
-    Serial.print("   ");
+    Serial.print("\t");
     Serial.print(trigger_threshhold);
-    Serial.print("   ");
-
-    Serial.print(rate);
+    Serial.print("\t");
   }
 }
 
@@ -360,14 +359,13 @@ void EMG2() {
   }
 
   // Do accounting based on whether we are exceeding threshold
-  int trigger_threshhold;
   if (!sensorType2) {
-    trigger_threshhold = (emg_signal2 - background2);
-    high_now2 = trigger_threshhold > threshold2;
+    trigger_threshhold2 = (emg_signal2 - background2);
+    high_now2 = trigger_threshhold2 > threshold2;
   }
   else if (sensorType2 == 1) {
-    trigger_threshhold = abs(emg_signal2 - background2);
-    high_now2 = trigger_threshhold > threshold2;
+    trigger_threshhold2 = abs(emg_signal2 - background2);
+    high_now2 = trigger_threshhold2 > threshold2;
   }
   if (high_now2) {
     last_high2 = current_time2;
@@ -404,15 +402,12 @@ void EMG2() {
   // Print out the signal values
   if (EMGDebugging) {
     Serial.print(emg_signal2);
-    Serial.print("   ");
+    Serial.print("\t");
     Serial.print(state2);
-    Serial.print("   ");
+    Serial.print("\t");
     Serial.print(background2);
-    Serial.print("   ");
-    Serial.print(trigger_threshhold);
-    Serial.print("   ");
-
-    Serial.println(rate2);
+    Serial.print("\t");
+    Serial.println(trigger_threshhold2); 
   }
 }
 
