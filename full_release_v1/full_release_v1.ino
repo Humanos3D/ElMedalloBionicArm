@@ -151,6 +151,11 @@ void setup() {
 
   // Rung EMG setup tasks
   EMGSetup();
+
+  // Detach servos
+  delay(SERVO_TIMEOUT_TIME);
+  servo.detach();
+  servo2.detach();
 }
 
 // the loop routine runs over and over
