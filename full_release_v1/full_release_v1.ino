@@ -44,6 +44,10 @@ boolean buttonFlag = 0; // 0 to use EMG sensors; 1 to use button
 boolean lockSwitchFlag = 1; // 0 to have lockswitch toggle between which EMG signal the button simulates; 1 to use lockswitch as a lock switch
 boolean motorFlag1 = 1; // 0 to disable motor; 1 to enable
 boolean motorFlag2 = 1; // 0 to disable motor; 1 to enable
+boolean sensorType = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
+boolean sensorType2 = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
+int sensorFlag = 2;                    // 0 to disable sensor; 1 for bicep; 2 for forearm
+int sensorFlag2 = 1;                   // 0 for disable sensor; 1 for bicep; 2 for forearm
 
 // Initialise variables
 boolean state = 0;                 // 0 for no signal; 1 for signal
@@ -67,12 +71,6 @@ void servos(int gripNumber);
 void readLockSwitch();
 
 // ---------EMG setup----------
-// Setup parameters
-boolean sensorType = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
-boolean sensorType2 = 1;                   // 0 for Protesis Avanzada; 1 for OYMotion
-int sensorFlag = 2;                    // 0 to disable sensor; 1 for bicep; 2 for foreearm
-int sensorFlag2 = 1;                   // 0 for disable sensor; 1 for bicep; 2 for forearm
-
 // Fixed parameters
 float background_frequency = 0.2; // Change rate to be considered background (Hz)
 float ceiling_frequency = 150;    // Highest expected frequency (Hz)
