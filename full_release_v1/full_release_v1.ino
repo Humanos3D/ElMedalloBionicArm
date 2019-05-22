@@ -71,29 +71,36 @@ void servos(int gripNumber);
 void readLockSwitch();
 
 // ---------EMG setup----------
+// Calibration parameters
+float threshold_oy_forearm = .53;
+float rise_time_oy_forearm = 2;
+float fall_time_oy_forearm = 1000;
+float threshold_pa_forearm = .5;
+float rise_time_pa_forearm = 100;
+float fall_time_pa_forearm = 1000;
+float threshold_oy_bicep = .46;
+float rise_time_oy_bicep = 2;
+float fall_time_oy_bicep = 1000;
+float threshold_pa_bicep = .5;
+float rise_time_pa_bicep = 100;
+float fall_time_pa_bicep = 1000;
+
 // Fixed parameters
 float background_frequency = 0.2; // Change rate to be considered background (Hz)
 float ceiling_frequency = 150;    // Highest expected frequency (Hz)
-float fall_time = 1000;           // Signal must be low this long for 1 -> 0 (ms)
 
 // Variable parameters we'll change in setup
-float threshold;                     // Voltage above background to register signal
+float threshold;                      // Voltage above background to register signal
 float threshold2;                     // Voltage above background to register signal
-float rise_time;                     // Must see signal this long for 0 -> 1 (ms)
+float rise_time;                      // Must see signal this long for 0 -> 1 (ms)
 float rise_time2;                     // Must see signal this long for 0 -> 1 (ms)
-float background_timeout;            // Max time to not calculate background (ms)
+float fall_time;                      // Signal must be low this long for 1 -> 0 (ms)
+float fall_time2;                     // Signal must be low this long for 1 -> 0 (ms)
+float background_timeout;             // Max time to not calculate background (ms)
 float background_timeout2;            // Max time to not calculate background (ms)
-float threshold_oy_forearm = .53;
-float rise_time_oy_forearm = 2;
 float background_timeout_oy_forearm = 5000;
-float threshold_pa_forearm = .5;
-float rise_time_pa_forearm = 100;
 float background_timeout_pa_forearm = 5000;
-float threshold_oy_bicep = .46;
-float rise_time_oy_bicep = 2;
 float background_timeout_oy_bicep = 5000;
-float threshold_pa_bicep = .5;
-float rise_time_pa_bicep = 100;
 float background_timeout_pa_bicep = 5000;
 
 // Initialization
@@ -227,20 +234,25 @@ void EMGSetup() {
     if (sensorFlag == 1) {
       threshold = threshold_oy_bicep;
       rise_time = rise_time_oy_bicep;
+      fall_time = fall_time_oy_bicep;
       background_timeout = background_timeout_oy_bicep;
     } else if (sensorFlag == 2) {
       threshold = threshold_oy_forearm;
       rise_time = rise_time_oy_forearm;
+      fall_time = fall_time_oy_forearm;
       background_timeout = background_timeout_oy_forearm;
+      
     }
   } else {
     if (sensorFlag == 1) {
       threshold = threshold_pa_bicep;
       rise_time = rise_time_pa_bicep;
+      fall_time = fall_time_pa_bicep;
       background_timeout = background_timeout_pa_bicep;
     } else if (sensorFlag == 2) {
       threshold = threshold_pa_forearm;
       rise_time = rise_time_pa_forearm;
+      fall_time = fall_time_pa_forearm;
       background_timeout = background_timeout_pa_forearm;
     }
   }
@@ -249,20 +261,24 @@ void EMGSetup() {
     if (sensorFlag == 1) {
       threshold2 = threshold_oy_bicep;
       rise_time2 = rise_time_oy_bicep;
+      fall_time2 = fall_time_oy_bicep;
       background_timeout2 = background_timeout_oy_bicep;
     } else if (sensorFlag == 2) {
       threshold2 = threshold_oy_forearm;
       rise_time2 = rise_time_oy_forearm;
+      fall_time2 = fall_time_oy_forearm;
       background_timeout2 = background_timeout_oy_forearm;
     }
   } else {
     if (sensorFlag == 1) {
       threshold2 = threshold_pa_bicep;
       rise_time2 = rise_time_pa_bicep;
+      fall_time2 = fall_time_pa_bicep;
       background_timeout2 = background_timeout_pa_bicep;
     } else if (sensorFlag == 2) {
       threshold2 = threshold_pa_forearm;
       rise_time2 = rise_time_pa_forearm;
+      fall_time2 = fall_time_pa_forearm;
       background_timeout2 = background_timeout_pa_forearm;
     }
   }
