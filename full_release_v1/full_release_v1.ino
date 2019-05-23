@@ -6,7 +6,7 @@
 
   Completed ~April 2019
 
-  EMGSetup() and EMGLoop() written by Bryn David and  Ben Complin
+  EMGSetup() and EMGLoop() written by Bryn David and  Ben Complin and Mark Walbran
   Everything else written by Mark Walbran
 */
 
