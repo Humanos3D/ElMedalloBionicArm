@@ -1,0 +1,148 @@
+arduinodata = dlmread ('matlabforearmandbicep.csv',';',0,0); %importing data
+
+%peakfilter is used to remove all peaks under less than half the amplitude of the highest peak
+peakfilter1=(max(arduinodata(:,4)))/2;
+peakfilter2=(max(arduinodata(:,8)))/2;
+
+%%displaying the plots for the transient signal for sensor 1 (blue) and sensor 2 (red)
+f1=figure
+plot(arduinodata(:,4))
+hold on
+plot(arduinodata(:,8))
+
+%%Find Peaks on each of the data, 500 data points apart and above half the value of the max peak
+[peakVal, locVal] = findpeaks(arduinodata(:,4),'MinPeakDistance',500,'MinPeakHeight',peakfilter1);
+[peakVal2, locVal2] = findpeaks(arduinodata(:,8),'MinPeakDistance',500,'MinPeakHeight',peakfilter2);
+
+
+s = size(locVal);%number of signal 1 peaks
+s2=size(locVal2);%number of signal 2 peaks
+
+%%printing various error messages based on the number of peaks. Should only be 6 as the protocol states 6 comfortable grip-activating contractions, for each sensor, are to be performed 
+ if s > 6
+   fprintf('Signal 1 from desired contraction is too low compared to signal from other movements or Signal 2 is also being picked up by sensor 1. Try again. If the same result use, different position combination.');
+ end
+ if s2 > 6
+   fprintf('Signal 2 from desired contraction is too low compared to signal from other movements or Signal 1 is also being picked up by sensor 2. Try again. If the same result use, different position combination.');
+end
+if 0 < s < 6
+   fprintf('Signal 1 is possible in this position but not perfect. Patient needs to be more consistent with desired contraction. Retry but if receiving this message after three attempts, try a different position.');
+ end
+ if 0 < s2 < 6
+   fprintf('Signal 2 Signal 1 is possible in this position but not perfect. Patient needs to be more consistent with desired contraction. Retry but if receiving this message after three attempts, try a different position.');
+end
+
+AV1=mean(peakVal);%mean peak amplitude of signal 1
+AV2=mean(peakVal2);%mean peak amplitude of signal 2
+
+MIN1=min(peakVal);%min peak amplitude of signal 1
+MIN2=min(peakVal2);%min peak amplitude of signal 1
+
+%%Calculating threshold through peak voltage and background signal during
+%%regular movements, selecting all data points that are more than 50 data points away from the peak
+
+locationnormalsignal1 = [locVal - 50, locVal + 50];
+locationnormalsignal2 = [locVal2 - 50, locVal2 + 50];
+
+normalsignal1i=arduinodata(1:locationnormalsignal1(1,1),4);
+normalsignal1ii=arduinodata(locationnormalsignal1(1,2):locationnormalsignal1(2,1),4);
+normalsignal1iii=arduinodata(locationnormalsignal1(2,2):locationnormalsignal1(3,1),4);
+normalsignal1iv=arduinodata(locationnormalsignal1(3,2):locationnormalsignal1(4,1),4);
+normalsignal1v=arduinodata(locationnormalsignal1(4,2):locationnormalsignal1(5,1),4);
+normalsignal1vi=arduinodata(locationnormalsignal1(5,2):locationnormalsignal1(6,1),4);
+normalsignal1=[normalsignal1i;normalsignal1ii;normalsignal1iii;normalsignal1iv;normalsignal1v;normalsignal1vi];
+
+normalsignal2i=arduinodata(1:locationnormalsignal2(1,1),8);
+normalsignal2ii=arduinodata(locationnormalsignal2(1,2):locationnormalsignal2(2,1),8);
+normalsignal2iii=arduinodata(locationnormalsignal2(2,2):locationnormalsignal2(3,1),8);
+normalsignal2iv=arduinodata(locationnormalsignal2(3,2):locationnormalsignal2(4,1),8);
+normalsignal2v=arduinodata(locationnormalsignal2(4,2):locationnormalsignal2(5,1),8);
+normalsignal2vi=arduinodata(locationnormalsignal2(5,2):locationnormalsignal2(6,1),8);
+normalsignal2=[normalsignal2i;normalsignal2ii;normalsignal2iii;normalsignal2iv;normalsignal2v;normalsignal2vi];
+
+%%finds the upper quartile of the picked up signal of all data points more than 50 data points away from the peak
+normalsignalupperquartile1i = sort(normalsignal1);
+nrows1 = size(normalsignalupperquartile1i);
+nthrows1=round((25*nrows1)/100);
+normalsignalupperquartile1=normalsignalupperquartile1i(1:nthrows1,:);
+
+normalsignalupperquartile2i = sort(normalsignal2);
+nrows2 = size(normalsignalupperquartile2i);
+nthrows2=round((25*nrows2)/100);
+normalsignalupperquartile2=normalsignalupperquartile2i(1:nthrows2,:);
+
+%%sets the background threshold as the mean amplitude of the upper quartile of all data, 50 or more data points away from the peak
+
+BackgroundThreshold1=mean(normalsignalupperquartile1);
+BackgroundThreshold2=mean(normalsignalupperquartile2);
+
+%%error code stating that if any of the peaks are below the background threshold, there is something wrong. Should have already been picked up in earlier error mesages but can never be too safe.
+if MIN1<=BackgroundThreshold1
+   fprintf('Signal1 is too low with the position and sensor combination, in comparison to signals generated from everyday movements. 3 options (in this order): i) Try again with the patient contracting a little stronger but still comfortable. ii)change the position of the sensor iii)change the sensor.');
+end
+
+if MIN2<=BackgroundThreshold2
+   fprintf('Signal2 is too low with the position and sensor combination, in comparison to signals generated from everyday movements. 3 options (in this order): i) Try again with the patient contracting a little stronger but still comfortable. ii)change the position of the sensor iii)change the sensor.');
+end
+
+%%Sets the threshold as the midpoint between the smallest peak and the background threshold
+Threshold1 = (mean(normalsignalupperquartile1)+MIN1)/2;
+Threshold2 = (mean(normalsignalupperquartile2)+MIN2)/2;
+
+%%False Posiitive test (receiving signal desired for the other sensor)
+Sensor2atSensor1Peak = arduinodata(locVal(:)-20:locVal(:)+20,8);
+Sensor1atSensor2Peak = arduinodata(locVal2(:)-20:locVal2+20,4);
+
+Sensor2flasepositive = Sensor2atSensor1Peak > Threshold2;
+Sensor1falsepositive = Sensor1atSensor2Peak > Threshold1;
+
+%%error messages for false positives
+if any(Sensor2flasepositive)
+    fprintf('Sensor 2 picks up contraction for sensor 1 too strongly. Move sensor 2 and try again!');
+end
+
+if any(Sensor1falsepositive)
+    fprintf('Sensor 1 picks up contraction for sensor 2 too strongly. Move sensor 1 and try again!');
+end
+
+%%rise time 1
+
+FS=mean((arduinodata(1:1000,9))*100);   %obtaining the rate of capture was in hundreds of Hz in matlab to keep serial plotter the same
+T=(1/FS)*1000;                          %Average time difference between each data point
+
+
+locVa1new = zeros(s); %sets variable(didnt set before)
+locVa1new = locVal;  
+
+for i=1:s %goes through and edits each row of locValnew one at a time
+while ((arduinodata(locVa1new(i), 4)) > Threshold1) %rise time in arduino is in relation to last low. hence why I have compared to the threshold and not to a % of the peak as is standard. 
+    
+    locVa1new(i) = locVa1new(i) - 1; %Increments the locaion of the peak down by 1 until it is lower than the threshold.
+    
+end
+end
+
+
+riseTime1 = min((locVal-locVa1new)*T); % minimum rise time should be used otherwise some peaks may be missed
+
+%%riseTime 2
+
+locVa1new2 = zeros(s2);
+locVa1new2 = locVal2;
+
+for i=1:s2
+while ((arduinodata(locVa1new2(i), 8)) > Threshold2)
+    
+    locVa1new2(i) = locVa1new2(i) - 1;
+    
+end
+end
+
+
+riseTime2 = min((locVal2-locVa1new2)*T); % Average Rise time
+
+%%Printing Appropriate Parameters
+fprintf('Sensor 1 Threshold is:%d\n', Threshold1);
+fprintf('Sensor 1 Rise Time is:%d\n', riseTime1);
+fprintf('Sensor 2 Threshold is:%d\n', Threshold2);
+fprintf('Sensor 2 Rise Time is:%d\n', riseTime2);
