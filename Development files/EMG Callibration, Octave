@@ -1,4 +1,13 @@
-arduinodata = dlmread ('matlabforearmandbicep.csv',';',0,0); %importing data
+arduinodata = dlmread ('myfilename.csv',';',0,0); %importing data
+
+%%sometimes the arduino background read glitches, becoming zero, creating
+%%an unexpected peak of >1.45V
+[overpeak, locplac] = findpeaks(arduinodata(:,4),'MinPeakHeight',1.45);
+[overpeak2, locplac2] = findpeaks(arduinodata(:,8),'MinPeakHeight',1.45);
+
+arduinodata(locplac,4) = 0;
+arduinodata(locplac2,8) = 0;
+
 
 %peakfilter is used to remove all peaks under less than half the amplitude of the highest peak
 peakfilter1=(max(arduinodata(:,4)))/2;
@@ -44,37 +53,37 @@ MIN2=min(peakVal2);%min peak amplitude of signal 1
 locationnormalsignal1 = [locVal - 50, locVal + 50];
 locationnormalsignal2 = [locVal2 - 50, locVal2 + 50];
 
-normalsignal1i=arduinodata(1:locationnormalsignal1(1,1),4);
-normalsignal1ii=arduinodata(locationnormalsignal1(1,2):locationnormalsignal1(2,1),4);
-normalsignal1iii=arduinodata(locationnormalsignal1(2,2):locationnormalsignal1(3,1),4);
-normalsignal1iv=arduinodata(locationnormalsignal1(3,2):locationnormalsignal1(4,1),4);
-normalsignal1v=arduinodata(locationnormalsignal1(4,2):locationnormalsignal1(5,1),4);
-normalsignal1vi=arduinodata(locationnormalsignal1(5,2):locationnormalsignal1(6,1),4);
-normalsignal1=[normalsignal1i;normalsignal1ii;normalsignal1iii;normalsignal1iv;normalsignal1v;normalsignal1vi];
+normalsignal1=zeros(15000);
+normalsignal1=arduinodata(1:locationnormalsignal1(1,1),4);
+for i=2:s
+h=size(normalsignal1);
+newnormalsignal=arduinodata(locationnormalsignal1((i-1),2):locationnormalsignal1((i),1),4);
+h2=size(newnormalsignal);
+normalsignal1(h+1:h2+h,1)=arduinodata(locationnormalsignal1((i-1),2):locationnormalsignal1((i),1),4);
+end
 
-normalsignal2i=arduinodata(1:locationnormalsignal2(1,1),8);
-normalsignal2ii=arduinodata(locationnormalsignal2(1,2):locationnormalsignal2(2,1),8);
-normalsignal2iii=arduinodata(locationnormalsignal2(2,2):locationnormalsignal2(3,1),8);
-normalsignal2iv=arduinodata(locationnormalsignal2(3,2):locationnormalsignal2(4,1),8);
-normalsignal2v=arduinodata(locationnormalsignal2(4,2):locationnormalsignal2(5,1),8);
-normalsignal2vi=arduinodata(locationnormalsignal2(5,2):locationnormalsignal2(6,1),8);
-normalsignal2=[normalsignal2i;normalsignal2ii;normalsignal2iii;normalsignal2iv;normalsignal2v;normalsignal2vi];
+normalsignal2=zeros(15000);
+normalsignal2=arduinodata(1:locationnormalsignal2(1,1),8);
+for i=2:s2
+h=size(normalsignal2);
+newnormalsignal2=arduinodata(locationnormalsignal2((i-1),2):locationnormalsignal2((i),1),8);
+h2=size(newnormalsignal2);
+normalsignal2(h+1:h2+h,1)=arduinodata(locationnormalsignal2((i-1),2):locationnormalsignal2((i),1),8);
+end
 
-%%finds the upper quartile of the picked up signal of all data points more than 50 data points away from the peak
-normalsignalupperquartile1i = sort(normalsignal1);
-nrows1 = size(normalsignalupperquartile1i);
-nthrows1=round((25*nrows1)/100);
-normalsignalupperquartile1=normalsignalupperquartile1i(1:nthrows1,:);
+normalsignalonepercent1i = sortrows(normalsignal1, -1);
+nrows1 = size(normalsignalonepercent1i);
+nthrows1=round((1*nrows1)/500);
+normalsignalonepercent1=normalsignalonepercent1i(1:nthrows1,:);
 
-normalsignalupperquartile2i = sort(normalsignal2);
-nrows2 = size(normalsignalupperquartile2i);
-nthrows2=round((25*nrows2)/100);
-normalsignalupperquartile2=normalsignalupperquartile2i(1:nthrows2,:);
+normalsignalonepercent2i = sortrows(normalsignal2, -1);
+nrows2 = size(normalsignalonepercent2i);
+nthrows2=round((1*nrows2)/500);
+normalsignalonepercent2=normalsignalonepercent2i(1:nthrows2,:);
 
-%%sets the background threshold as the mean amplitude of the upper quartile of all data, 50 or more data points away from the peak
 
-BackgroundThreshold1=mean(normalsignalupperquartile1);
-BackgroundThreshold2=mean(normalsignalupperquartile2);
+BackgroundThreshold1=mean(normalsignalonepercent1);
+BackgroundThreshold2=mean(normalsignalonepercent2);
 
 %%error code stating that if any of the peaks are below the background threshold, there is something wrong. Should have already been picked up in earlier error mesages but can never be too safe.
 if MIN1<=BackgroundThreshold1
@@ -85,9 +94,10 @@ if MIN2<=BackgroundThreshold2
    fprintf('Signal2 is too low with the position and sensor combination, in comparison to signals generated from everyday movements. 3 options (in this order): i) Try again with the patient contracting a little stronger but still comfortable. ii)change the position of the sensor iii)change the sensor.');
 end
 
-%%Sets the threshold as the midpoint between the smallest peak and the background threshold
-Threshold1 = (mean(normalsignalupperquartile1)+MIN1)/2;
-Threshold2 = (mean(normalsignalupperquartile2)+MIN2)/2;
+%%Sets the threshold as 2/3 between the smallest peak and the top percentile of the background threshold
+Threshold1 = ((MIN1-mean(normalsignalonepercent1))*(2/3))+mean(normalsignalonepercent1);
+Threshold2 = ((MIN2-mean(normalsignalonepercent2))*(2/3))+mean(normalsignalonepercent2);
+
 
 %%False Posiitive test (receiving signal desired for the other sensor)
 Sensor2atSensor1Peak = arduinodata(locVal(:)-20:locVal(:)+20,8);
