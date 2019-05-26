@@ -29,16 +29,16 @@ s2=size(locVal2);%number of signal 2 peaks
 
 %%printing various error messages based on the number of peaks. Should only be 6 as the protocol states 6 comfortable grip-activating contractions, for each sensor, are to be performed 
  if s > 6
-   fprintf('Signal 1 from desired contraction is too low compared to signal from other movements or Signal 2 is also being picked up by sensor 1. Try again. If the same result use, different position combination.');
+   fprintf('Sensor 1 Error 1');
  end
  if s2 > 6
-   fprintf('Signal 2 from desired contraction is too low compared to signal from other movements or Signal 1 is also being picked up by sensor 2. Try again. If the same result use, different position combination.');
+   fprintf('Sensor 2 Error 2');
 end
 if 0 < s < 6
-   fprintf('Signal 1 is possible in this position but not perfect. Patient needs to be more consistent with desired contraction. Retry but if receiving this message after three attempts, try a different position.');
+   fprintf('Sensor 1 Error 2');
  end
  if 0 < s2 < 6
-   fprintf('Signal 2 Signal 1 is possible in this position but not perfect. Patient needs to be more consistent with desired contraction. Retry but if receiving this message after three attempts, try a different position.');
+   fprintf('Sensor 2 Error 2');
 end
 
 AV1=mean(peakVal);%mean peak amplitude of signal 1
@@ -87,11 +87,11 @@ BackgroundThreshold2=mean(normalsignalonepercent2);
 
 %%error code stating that if any of the peaks are below the background threshold, there is something wrong. Should have already been picked up in earlier error mesages but can never be too safe.
 if MIN1<=BackgroundThreshold1
-   fprintf('Signal1 is too low with the position and sensor combination, in comparison to signals generated from everyday movements. 3 options (in this order): i) Try again with the patient contracting a little stronger but still comfortable. ii)change the position of the sensor iii)change the sensor.');
+   fprintf('Sensor 1 Error 3');
 end
 
 if MIN2<=BackgroundThreshold2
-   fprintf('Signal2 is too low with the position and sensor combination, in comparison to signals generated from everyday movements. 3 options (in this order): i) Try again with the patient contracting a little stronger but still comfortable. ii)change the position of the sensor iii)change the sensor.');
+   fprintf('Sesnsor 2 Error 3');
 end
 
 %%Sets the threshold as 2/3 between the smallest peak and the top percentile of the background threshold
@@ -108,11 +108,11 @@ Sensor1falsepositive = Sensor1atSensor2Peak > Threshold1;
 
 %%error messages for false positives
 if any(Sensor2flasepositive)
-    fprintf('Sensor 2 picks up contraction for sensor 1 too strongly. Move sensor 2 and try again!');
+    fprintf('Sesnsor 2 Error 4');
 end
 
 if any(Sensor1falsepositive)
-    fprintf('Sensor 1 picks up contraction for sensor 2 too strongly. Move sensor 1 and try again!');
+    fprintf('Sesnsor 1 Error 4');
 end
 
 %%rise time 1
