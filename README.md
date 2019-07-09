@@ -4,6 +4,6 @@ Here you can find full documentation on the latest design of the [world's first 
 
 <img src="https://github.com/enable-medellin/El-Medallo-Bionic-Arm/blob/master/wiki_images/warm%20render%20image%206.jpg" width="1000" align="middle"> 
 
-You can [email us](enablemedellin@gmail.com) to request access to our private [Wiki](https://github.com/enable-medellin/robotic-arm/wiki) for additional development notes.
+You can email us at enablemedellin@gmail.com to request access to our [private Wiki](https://github.com/enable-medellin/robotic-arm/wiki) for additional development notes.
 
 If you are interested in learning more about e-NABLE Medellín and what we do you can find out more at our [website](https://e-nablemedellin.com/en/home/).
