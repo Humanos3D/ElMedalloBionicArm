@@ -6,4 +6,4 @@
 
 You can email us at enablemedellin@gmail.com to request access to our [private Wiki](https://github.com/enable-medellin/robotic-arm/wiki) for additional development notes.
 
-If you are interested in learning more about e-NABLE Medellín and what we do you can find out more at our [website](https://e-nablemedellin.com/en/home/).
+If you are interested in learning more about Humanos3D and what we do you can find out more at our [website](https://e-nablemedellin.com/en/home/).
