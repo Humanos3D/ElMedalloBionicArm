@@ -1,6 +1,6 @@
 # El Medallo MK 1 - Bionic Arm
 
-[Here you can find full documentation on the latest design of the world's first truly open-source low-cost bionic arm by e-NABLE Medellín](https://github.com/enable-medellin/El-Medallo-Bionic-Arm/wiki) (completed May 2019).
+[Here you can find full documentation on the latest design of the world's first truly open-source low-cost bionic arm by Humanos3D](https://github.com/enable-medellin/El-Medallo-Bionic-Arm/wiki) (completed May 2019).
 
 <img src="https://github.com/enable-medellin/El-Medallo-Bionic-Arm/blob/master/wiki_images/El-Medallo%20assembly%20small.png" width="1000" align="middle"> 
 
